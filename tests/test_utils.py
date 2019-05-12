@@ -47,7 +47,15 @@ class TotreeTest(unittest.TestCase):
 
         self.assertEqual(split_multiple(word, [' and ', ' or ']), ['lorem', 'ipsum', 'dolor', 'sid'])
 
-    def remove_front_parenthesis(self):
-        word = '(SELECT * FROM table1 JOIN lorem ipsum)'
+    def test_remove_front_parenthesis(self):
+        self.assertEqual(remove_front_parenthesis('(SELECT * FROM table1 JOIN lorem ipsum)'), 'SELECT * FROM table1 JOIN lorem ipsum')
+        self.assertEqual(remove_front_parenthesis('min(avg)'),'avg')
+        self.assertEqual(remove_front_parenthesis('avg'),'avg')
 
-        self.assertEqual(remove_front_parenthesis(word), 'SELECT * FROM table1 JOIN lorem ipsum')
+    def test_smart_find(self):
+        self.assertEqual(smart_find('abc', 'a'),0)
+        self.assertEqual(smart_find('abc', 'bc'),1)
+        self.assertEqual(smart_find('abc', 'c'),2)
+        self.assertEqual(smart_find('abc', 'd'),-1)
+        self.assertEqual(smart_find('o a (select)', 'select'),-1)
+        self.assertEqual(smart_find('o a (select)select', 'select'),12)

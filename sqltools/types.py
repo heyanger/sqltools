@@ -6,14 +6,11 @@ class State(Enum):
     WHERE = auto()
     GROUP = auto()
     ORDER = auto()
-
-    IUEN = auto()
-    KW = auto()
+    LIMIT = auto()
+    HAVING = auto()
     COL = auto()
     OP = auto()
     AGG = auto()
     TERMINAL = auto()
-    LOGIC = auto()
-    DAL = auto()
-    HAVING = auto()
+
     
