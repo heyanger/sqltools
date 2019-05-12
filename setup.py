@@ -11,5 +11,4 @@ setup(name='sqltools',
       author='He Yang, Er',
       packages=find_packages('sqltools'),
       package_dir={'': 'sqltools'},
-      py_modules=[splitext(basename(path))[0] for path in glob('sqltools/*.py')],
      )
