@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/funkytennisball/sqltools.svg?branch=master)](https://travis-ci.com/funkytennisball/sqltools)
+
 # SQL tools
 
 ## Queries not supported

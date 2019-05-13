@@ -12,5 +12,11 @@ class State(Enum):
     OP = auto()
     AGG = auto()
     TERMINAL = auto()
+    LOGIC = auto()
+    NONE = auto()
+    IUE = auto()    
 
-    
+class Seq(Enum):
+    copy = auto()
+    copyandchange = auto()
+    remove = auto()

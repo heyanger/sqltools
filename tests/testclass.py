@@ -7,6 +7,7 @@ class SqltoolsTest(unittest.TestCase):
         self.assertIsNotNone(right)
 
         self.assertEqual(left.type, right.type)
+        self.assertEqual(left.value, right.value)
         self.assertDictEqual(left.attr, right.attr)
         self.assertEqual(len(left.children), len(right.children))
     
@@ -25,8 +26,8 @@ class SqltoolsTest(unittest.TestCase):
                 print('-----')
                 cur_level = level
             
-            if 'value' in node.attr:
-                print(node.type.name+'['+node.attr['value']+']', end=',')
+            if node.value:
+                print(node.type.name+'['+node.value+']', end=',')
             else:
                 print(node.type.name, end = ',')
 

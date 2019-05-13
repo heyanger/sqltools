@@ -1,14 +1,19 @@
 import re
 
 def smart_find(sentence, word):
-    count = 0
+    bracket_count = 0
+    dq_count = 0
+
     for i in range(len(sentence)-len(word)+1):
         if sentence[i] == '(':
-            count += 1
+            bracket_count += 1
         elif sentence[i] == ')':
-            count -= 1
+            bracket_count -= 1
 
-        if count != 0:
+        if sentence[i] == '"':
+            dq_count = 1 - dq_count
+
+        if bracket_count != 0 or dq_count != 0:
             continue
 
         if sentence[i:i+len(word)] == word:
@@ -26,7 +31,7 @@ def split_string_seq(sentence, words):
     r = ""
 
     for w in words:
-        v = smart_find(sentence.lower(), w)
+        v = smart_find(sentence.lower(), w.lower())
 
         if v >= 0:
             x = min(x, v)

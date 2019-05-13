@@ -25,6 +25,14 @@ class TotreeTest(unittest.TestCase):
         res, _, _ = split_string_seq(words[-1], KEYWORD[1:])
         self.assertEqual(res, 'SELECT * FROM table1 lorem ipsum')
 
+        left, right, _ = split_string_seq('lorem AND ipsum OR dolor', [' or ', ' and '])
+        self.assertEqual(left, 'lorem')
+        self.assertEqual(right, 'ipsum OR dolor')
+
+        left, right, _ = split_string_seq('lorem', [' or ', ' and '])
+        self.assertEqual(left, 'lorem')
+        self.assertEqual(right, '')
+
     def test_splitstringseq_op(self):
         words = [
             'abc = def'
