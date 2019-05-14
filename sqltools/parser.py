@@ -9,7 +9,7 @@ t = sqlparse.tokens.Token
 class Parser:
     IUE = ["intersect", "union", "except"]
     KEYWORDS = [(State.SELECT, None, 'SELECT'), (State.WHERE, sqlparse.sql.Where, None), (State.GROUP_BY, None, 'GROUP BY'), 
-        (State.LIMIT, None, 'LIMIT') , (State.LIMIT, None, 'ORDER BY')]
+        (State.LIMIT, None, 'LIMIT') , (State.ORDER_BY, None, 'ORDER BY')]
 
     def handle(node, token):
         if node.type == State.ROOT:
@@ -26,7 +26,15 @@ class Parser:
             Parser.handle_group(node, token)
         elif node.type == State.TERMINAL:
             Parser.handle_terminal(node, token)
-        
+        elif node.type == State.LIMIT:
+            Parser.handle_limit(node, token)
+    
+    @staticmethod
+    def handle_limit(node, tokens):
+        for tok in tokens:
+            if type(tok) is sqlparse.sql.Token and tok.ttype == t.Literal.Number.Integer:
+                node.value = tok.value
+
     @staticmethod
     def handle_pair(node, tokens):
         cur_tokens = []

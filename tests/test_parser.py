@@ -62,6 +62,25 @@ class ParserTest(SqltoolsTest):
 
         self.assertTreeEqual(tn, node)
 
+    def test_select2(self):
+        node = TreeNode(State.ROOT)
+        node.children.append(TreeNode(State.NONE))
+        node.children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children.append(TreeNode(State.COL, value="salary"))
+        node.children[0].children.append(TreeNode(State.LIMIT, value='1'))
+
+        node.children[0].children[0].attr['tables']= ['instructor']
+        
+        sql = "SELECT salary FROM instructor LIMIT 1"
+        token = sqlparse.parse(sql)[0]
+
+        tn = TreeNode(State.ROOT)
+        Parser.handle(tn, token)
+
+        self.print_tree(tn)
+
+        self.assertTreeEqual(tn, node)
+
     def test_root2(self):
         node = TreeNode(State.ROOT)
         node.children.append(TreeNode(State.NONE))
