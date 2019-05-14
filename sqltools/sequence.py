@@ -99,21 +99,33 @@ class Sequence:
         
         idx += 1
 
-        for c in children:
+        for c in node.children:
             if sequence[idx] == Seq.remove.name:
                 c.attr['remove'] = True
                 idx += 1
             elif sequence[idx] == Seq.copy.name or sequence[idx] == Seq.copyandchange.name:
                 idx = Sequence.apply_sequence(c, sequence, idx)
 
-        node.children = list(filter(lambda x: 'remove' in x.attr and x.attr['remove'], node.children))
+        node.children = list(filter(lambda x: 'remove' not in x.attr, node.children))
 
         permutes = [Seq.copy.name, Seq.remove.name, Seq.copyandchange.name]
 
-        while sequence[idx] not in permutes:
+        new_sequence = []
+        while idx < len(sequence) and sequence[idx] not in permutes:
+            new_sequence.append(sequence[idx])
             idx += 1
 
+        Sequence.insert_np_sequence(node, new_sequence)
+
         return idx
+
+    def insert_np_sequence(node, sequence):
+        if len(sequence) == 0:
+            return
+
+        seq = ' '.join(remove_front_sqbracket(s) for s in sequence)
+        token = sqlparse.parse(seq)[0]
+        Parser.handle(node, token)
 
 def generate_sequence(left, right):
     left, right = left.clone(), right.clone()
@@ -127,6 +139,11 @@ def generate_sequence_sql(left, right):
 
     return Sequence.generate_sequence(left, right)
 
-def apply_sequence(sql, sequence):
-    tree = Sequence.apply(to_tree(sql), sequence, 0)
-    return to_sql(tree)
+def apply_sequence(tree, sequence):
+    Sequence.apply_sequence(tree, sequence, 0)
+    return tree
+
+def apply_sequence_sql(sql, sequence):
+    tree = to_tree(sql)
+    new_tree = apply_sequence(tree, sequence)
+    return to_sql(new_tree)
