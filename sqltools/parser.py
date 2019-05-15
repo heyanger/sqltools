@@ -11,32 +11,32 @@ class Parser:
     KEYWORDS = [(State.SELECT, None, 'SELECT'), (State.WHERE, sqlparse.sql.Where, None), (State.GROUP_BY, None, 'GROUP BY'), 
         (State.LIMIT, None, 'LIMIT') , (State.ORDER_BY, None, 'ORDER BY')]
 
-    def handle(node, token):
+    def handle(node, token, col_map=None):
         if node.type == State.ROOT:
-            Parser.handle_root(node, token)
+            Parser.handle_root(node, token, col_map)
         elif node.type == State.NONE:
-            Parser.handle_keyword(node, token)
+            Parser.handle_keyword(node, token, col_map)
         elif node.type == State.SELECT:
-            Parser.handle_select(node, token)
+            Parser.handle_select(node, token, col_map)
         elif node.type == State.WHERE:
-            Parser.handle_where(node, token)
+            Parser.handle_where(node, token, col_map)
         elif node.type == State.COL:
-            Parser.handle_col(node, token)
+            Parser.handle_col(node, token, col_map)
         elif node.type == State.GROUP_BY:
-            Parser.handle_group(node, token)
+            Parser.handle_group(node, token, col_map)
         elif node.type == State.TERMINAL:
-            Parser.handle_terminal(node, token)
+            Parser.handle_terminal(node, token, col_map)
         elif node.type == State.LIMIT:
-            Parser.handle_limit(node, token)
+            Parser.handle_limit(node, token, col_map)
     
     @staticmethod
-    def handle_limit(node, tokens):
+    def handle_limit(node, tokens, col_map=None):
         for tok in tokens:
             if type(tok) is sqlparse.sql.Token and tok.ttype == t.Literal.Number.Integer:
                 node.value = tok.value
 
     @staticmethod
-    def handle_pair(node, tokens):
+    def handle_pair(node, tokens, col_map=None):
         cur_tokens = []
 
         if type(tokens) is sqlparse.sql.Comparison:
@@ -54,7 +54,7 @@ class Parser:
             op = ' '.join(c.value for c in cur_tokens[1:-1])
 
         n = TreeNode(State.COL)
-        Parser.handle(n, left)
+        Parser.handle(n, left, col_map)
         node.children.append(n)
 
         cn = TreeNode(State.OP, value=op.lower())
@@ -64,49 +64,111 @@ class Parser:
 
         if type(right) is sqlparse.sql.Parenthesis:
             leaf_node = TreeNode(State.ROOT)
-            Parser.handle(leaf_node, right)
+            Parser.handle(leaf_node, right, col_map)
         else:
             leaf_node = TreeNode(State.TERMINAL, value=right.value)
 
         cn.children.append(leaf_node)
             
     @staticmethod
-    def handle_col(node, token):
+    def handle_col(node, token, col_map=None):
         if type(token) is sqlparse.sql.Function:
             n = TreeNode(State.AGG, value = token.tokens[0].value)
             node.children.append(n)
-            node.value = token.tokens[-1].tokens[1].value
+
+            node.value = Parser.generate_col_name(token.tokens[-1].tokens[1].value, col_map)
         else:
-            node.value = token.value
+            node.value = Parser.generate_col_name(token.value, col_map)
 
     @staticmethod
-    def handle_select(node, tokens):
+    def generate_col_map(tokens, table_info):
+        col_map = {}
+
+        for tbl in table_info:
+            for col in table_info[tbl]:
+                col_map[col.lower()] = tbl.lower()+'.'+col.lower()
+                
+        return col_map
+
+    @staticmethod
+    def generate_col_name(value, col_map=None):
+        value = value.lower()
+        if col_map is None or value not in col_map:
+            return value
+        
+        return col_map[value]
+
+    @staticmethod
+    def handle_select(node, tokens, col_map=None):
         cur_tokens = get_toks(tokens)
         cols = inbetween_toks(cur_tokens, sqlparse.sql.Token, 'select', sqlparse.sql.Token, 'from')
+
+        Parser.handle_tables(node, cur_tokens, col_map)
 
         for c in cols:
             if type(c) is sqlparse.sql.IdentifierList:
                 for k in c.tokens:
                     if type(k) is sqlparse.sql.Function or type(k) is sqlparse.sql.Identifier or (type(k) is sqlparse.sql.Token and k.value == '*'):
                         new_node = TreeNode(State.COL)
-                        Parser.handle(new_node, k)
+                        Parser.handle(new_node, k, col_map)
                         node.children.append(new_node)
 
             if type(c) is sqlparse.sql.Function or type(c) is sqlparse.sql.Identifier or (type(c) is sqlparse.sql.Token and c.value == '*'):
                 new_node = TreeNode(State.COL)
-                Parser.handle(new_node, c)
+                Parser.handle(new_node, c, col_map)
                 node.children.append(new_node)
         
-        tables = inbetween_toks_multi(cur_tokens, sqlparse.sql.Token, 'from', [(y, z) for x, y, z in Parser.KEYWORDS[1:]])
+    @staticmethod
+    def handle_tables(node, tokens, col_map):
+        tables = inbetween_toks_multi(tokens, sqlparse.sql.Token, 'from', [(y, z) for x, y, z in Parser.KEYWORDS[1:]])
 
         node.attr['tables'] = []
 
         for t in tables[1:]:
             if type(t) is sqlparse.sql.Identifier:
-                node.attr['tables'].append(t.value)
+                node.attr['tables'].extend(Parser.generate_table_name(t))        
+        
+                Parser.update_col_map(t, col_map)
+
+    @staticmethod
+    def update_col_map(token, col_map):
+        if col_map is None:
+            return
+
+        cur_tokens = get_toks(token.tokens)
+        col_pair = []
+
+        for idx, tok in enumerate(cur_tokens):
+            if type(tok) is sqlparse.sql.Token and tok.ttype is t.Keyword and tok.value.lower() == 'as':
+                # assume FROM contains only names, AS and identifiers
+                previous = cur_tokens[idx-1].value.lower()+'.'
+                nxt = cur_tokens[idx+1].value.lower()+'.'
+
+                col_pair.append((previous, nxt))
+
+        new_mp = {}
+        for previous, nxt in col_pair:
+            for key in col_map:
+                value = col_map[key]
+                if value.startswith(previous):
+                    new_key = nxt + value.replace(previous, '', 1)
+                    new_mp[new_key] = col_map[key]
+
+        for key in new_mp:
+            col_map[key] = new_mp[key]
+    
+
+    @staticmethod
+    def generate_table_name(token):
+        res = []
+        for tok in token.tokens:
+            if type(tok) is sqlparse.sql.Token and tok.ttype is t.Name:
+                res.append(tok.value.lower())
+
+        return res
         
     staticmethod
-    def handle_root(node, tokens):
+    def handle_root(node, tokens, col_map=None):
         tokens = get_toks(tokens)
 
         for x in Parser.IUE:
@@ -116,8 +178,8 @@ class Parser:
                 left, right = tokens[:i], tokens[i+1:]
                 left_node, right_node = TreeNode(State.ROOT), TreeNode(State.ROOT)
 
-                Parser.handle(left_node, left)
-                Parser.handle(right_node, right)
+                Parser.handle(left_node, left, col_map)
+                Parser.handle(right_node, right, col_map)
 
                 new_node = TreeNode(State.IUE, value=x)
                 new_node.children.append(left_node)
@@ -128,16 +190,16 @@ class Parser:
 
         new_node = TreeNode(State.NONE)
         node.children.append(new_node)
-        Parser.handle_keyword(new_node, tokens)
+        Parser.handle_keyword(new_node, tokens, col_map)
 
     @staticmethod
-    def handle_op(node, token):
+    def handle_op(node, token, col_map=None):
         if token is sqlparse.sql.Identifier:
             n = TreeNode(State.TERMINAL, value = token.tokens[0].value)
             node.children.append(n)
 
     @staticmethod
-    def handle_keyword(node, tokens):
+    def handle_keyword(node, tokens, col_map=None):
         tokens = get_toks(tokens)
 
         for state, typ, name in Parser.KEYWORDS:
@@ -146,41 +208,41 @@ class Parser:
             if i >= 0:
                 new_node = TreeNode(state)
                 new_tokens = inbetween_toks_multi(tokens, typ, name, [(y, z) for x, y, z in Parser.KEYWORDS])
-                Parser.handle(new_node, new_tokens)
+                Parser.handle(new_node, new_tokens, col_map)
                 node.children.append(new_node)
 
     @staticmethod
-    def handle_group(node, tokens):
+    def handle_group(node, tokens, col_map=None):
         tokens = get_toks(tokens)
 
         for i, token in enumerate(tokens):
             if type(token) is sqlparse.sql.Token and token.value.lower() == 'having':
                 new_node = TreeNode(State.HAVING)
-                Parser.handle_logic(new_node, tokens[i+1:])
+                Parser.handle_logic(new_node, tokens[i+1:], col_map)
                 node.children.append(new_node)
                 return
 
             if type(token) is sqlparse.sql.Identifier:
                 new_node = TreeNode(State.COL)
-                Parser.handle(new_node, token)
+                Parser.handle(new_node, token, col_map)
                 node.children.append(new_node)
 
     @staticmethod
-    def handle_where(node, tokens):
+    def handle_where(node, tokens, col_map=None):
         token = get_toks(tokens[0].tokens)
 
-        Parser.handle_logic(node, token[1:])
+        Parser.handle_logic(node, token[1:], col_map)
 
     @staticmethod
-    def handle_logic(node, tokens):
+    def handle_logic(node, tokens, col_map=None):
         tokens = get_toks(tokens)
 
         for idx, token in enumerate(tokens):
             if type(token) is sqlparse.sql.Token and token.value.lower() == 'and':
                 new_node = TreeNode(State.LOGIC, value='and')
                 
-                Parser.handle_logic(new_node, tokens[:idx])
-                Parser.handle_logic(new_node, tokens[idx+1:])
+                Parser.handle_logic(new_node, tokens[:idx], col_map)
+                Parser.handle_logic(new_node, tokens[idx+1:], col_map)
 
                 node.children.append(new_node)
 
@@ -189,8 +251,8 @@ class Parser:
             if type(token) is sqlparse.sql.Token and token.value.lower() == 'or':
                 new_node = TreeNode(State.LOGIC, value='or')
                 
-                Parser.handle_logic(new_node, tokens[:idx])
-                Parser.handle_logic(new_node, tokens[idx+1:])
+                Parser.handle_logic(new_node, tokens[:idx], col_map)
+                Parser.handle_logic(new_node, tokens[idx+1:], col_map)
 
                 node.children.append(new_node)
 
@@ -252,7 +314,6 @@ class Unparser:
         return res
     
     def unparse_col(node):
-        print(node.value)
         res = node.value
 
         for c in node.children:
@@ -276,7 +337,7 @@ class Unparser:
     def unparse_terminal(node):
         return node.value
 
-def to_tree(sql, tables=None):
+def to_tree(sql, table_info=None):
     """Converts a sql string into a tree of type TreeNode 
     :param sql: a sql string
 
@@ -286,10 +347,11 @@ def to_tree(sql, tables=None):
         raise TypeError("SQL must be a string")
 
     node = TreeNode(State.ROOT)
-    tables = {} if tables is None else tables
     tokens = sqlparse.parse(sql)[0].tokens
 
-    Parser.handle(node, tokens)
+    col_map = Parser.generate_col_map(tokens, table_info) if table_info is not None else None
+
+    Parser.handle(node, tokens, col_map)
 
     return node
 
