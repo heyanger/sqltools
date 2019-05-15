@@ -67,3 +67,6 @@ class TotreeTest(unittest.TestCase):
         self.assertEqual(smart_find('abc', 'd'),-1)
         self.assertEqual(smart_find('o a (select)', 'select'),-1)
         self.assertEqual(smart_find('o a (select)select', 'select'),12)
+
+    def test_remove_front_sqbracket(self):
+        self.assertEqual(remove_front_sqbracket('[hello]'), 'hello')

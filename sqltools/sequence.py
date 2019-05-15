@@ -88,15 +88,14 @@ class Sequence:
         if attr['status'] == Seq.copy or attr['status'] == Seq.remove:
             ls.append(attr['status'].name)
             return
-        
-        ls.append(Seq.copyandchange.name)   
+
+        if len(attr['insert']) == 0:
+            ls.append(Seq.copyandchange.name)
+        else:
+            ls.append(Seq.copyandchange.name + '[' + ','.join(Sequence.node_to_sequence(attr['insert'][0]))+']')
 
         for c in node.children:
             Sequence.generate_sequence_text(c, ls)
-
-        if 'insert' in attr:
-            for i in attr['insert']:
-                ls.extend(Sequence.node_to_sequence(i))
 
     @staticmethod
     def apply_sequence(node, sequence, idx):
@@ -105,42 +104,55 @@ class Sequence:
 
         if sequence[idx] == Seq.copy.name:
             return idx + 1
-        
+
+        idn = idx
         idx += 1
 
         for c in node.children:
             if sequence[idx] == Seq.remove.name:
                 c.attr['remove'] = True
                 idx += 1
-            elif sequence[idx] == Seq.copy.name or sequence[idx] == Seq.copyandchange.name:
+            elif sequence[idx] == Seq.copy.name:
+                idx = Sequence.apply_sequence(c, sequence, idx)
+            elif sequence[idx].startswith(Seq.copyandchange.name):
                 idx = Sequence.apply_sequence(c, sequence, idx)
 
         node.children = list(filter(lambda x: 'remove' not in x.attr, node.children))
 
-        permutes = [Seq.copy.name, Seq.remove.name, Seq.copyandchange.name]
-
-        while idx < len(sequence) and sequence[idx] not in permutes:
-            if '[' in sequence[idx]:
-                if sequence[idx][:3] == 'COL':
-                    col = remove_front_sqbracket(sequence[idx])
-                    n = TreeNode(State.COL, value=col)
-                    node.children.append(n)
-                else:
-                    col = remove_front_sqbracket(sequence[idx])
-                    n = TreeNode(State.AGG, value=col)
-                    node.children.append(n)
-            else:
-                break
-            idx += 1
-
-        new_sequence = []
-        while idx < len(sequence) and sequence[idx] not in permutes:
-            new_sequence.append(sequence[idx])
-            idx += 1
-
-        Sequence.insert_np_sequence(node, new_sequence)
+        if idn < len(sequence):
+            print(sequence[idn])
+            if not sequence[idn] == Seq.copyandchange.name:
+                inseq = remove_front_sqbracket(sequence[idn]).split(',')
+                Sequence.apply_insert_sequence(node, inseq)
 
         return idx
+
+    def apply_insert_sequence(node, inseq):
+        if len(inseq) == 0:
+            return
+
+        print(inseq)
+
+        i = 0
+        for content in inseq:
+            if content[:3] == 'COL':
+                col = remove_front_sqbracket(content)
+                n = TreeNode(State.COL, value=col)
+                node.children.append(n)
+                i += 1
+            elif content[:3] == 'AGG':
+                col = remove_front_sqbracket(content)
+                n = TreeNode(State.AGG, value=col)
+                node.children.append(n)
+                i += 1
+            else:
+                break
+
+        if i < len(inseq):
+            seq = ' '.join(remove_front_sqbracket(s) for s in inseq)
+            token = sqlparse.parse(seq)[0]
+            Parser.handle(node, token)
+
 
     def insert_np_sequence(node, sequence):
         if len(sequence) == 0:
@@ -159,7 +171,6 @@ def generate_sequence(left, right):
 def generate_sequence_sql(left, right):
     left, right = to_tree(left), to_tree(right)
     Sequence.compare(left, right)
-
     seq = Sequence.generate_sequence(left, right)
     return seq
 
