@@ -20,7 +20,7 @@ class SequenceTest(SqltoolsTest):
         sql1 = 'SELECT count(*) FROM Professionals'
         sql2 = "SELECT count(*) FROM Professionals WHERE city = 'West Heidi'"
 
-        self.assertListEqual(generate_sequence_sql(sql1, sql2), ['copyandchange', 'copyandchange', 'copy', 'WHERE', 'COL[city]', 'OP[=]', "TERMINAL['West Heidi']"])
+        self.assertListEqual(generate_sequence_sql(sql1, sql2), ['copyandchange', 'copyandchange[WHERE,COL[city],OP[=],TERMINAL[\'West Heidi\']]', 'copy'])
 
     def test_apply_sequence_sql1(self):
         sql1 = 'SELECT count(*) FROM Professionals'
