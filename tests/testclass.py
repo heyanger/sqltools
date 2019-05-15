@@ -1,6 +1,8 @@
 import unittest
 from collections import deque
 
+from sqltools.utils import *
+
 class SqltoolsTest(unittest.TestCase):
     def assertTreeEqual(self, left, right):
         self.assertIsNotNone(left)
@@ -14,25 +16,7 @@ class SqltoolsTest(unittest.TestCase):
         for i in range(len(left.children)):
             self.assertTreeEqual(left.children[i], right.children[i])
     
-    def print_tree(self, node):
-        q = deque([[node, 0]])
-        cur_level = 0
-
-        while q:
-            node, level = q.pop()
-            
-            if level != cur_level:
-                print()
-                print('-----')
-                cur_level = level
-            
-            if node.value:
-                print(node.type.name+'['+node.value+']', end=',')
-            else:
-                print(node.type.name, end = ',')
-
-            for c in node.children:
-                q.appendleft([c, level + 1])
-
+    def print_tree(self, node, highlights=None):
+        tree_print(node, highlights)
 
     

@@ -155,6 +155,39 @@ class ParserTest(SqltoolsTest):
         
         self.assertTreeEqual(tn, node)
 
+    def test_select4(self):
+        node = TreeNode(State.SELECT)
+        node.children.append(TreeNode(State.COL, value="*"))
+
+        node.attr['tables']= ['instructor']
+        
+        sql = "SELECT * FROM instructor"
+        token = sqlparse.parse(sql)[0]
+
+        tn = TreeNode(State.SELECT)
+        Parser.handle_select(tn, token)
+
+        self.print_tree(tn)
+
+        self.assertTreeEqual(tn, node)
+
+    def test_select3(self):
+        node = TreeNode(State.SELECT)
+        node.children.append(TreeNode(State.COL, value="*"))
+        node.children.append(TreeNode(State.COL, value="department_name"))
+
+        node.attr['tables']= ['instructor']
+        
+        sql = "SELECT *, department_name FROM instructor"
+        token = sqlparse.parse(sql)[0]
+
+        tn = TreeNode(State.SELECT)
+        Parser.handle_select(tn, token)
+
+        self.print_tree(tn)
+
+        self.assertTreeEqual(tn, node)
+
     def test_group2(self):
         node = TreeNode(State.GROUP_BY)
         node.children.append(TreeNode(State.COL, value="department_name"))
@@ -210,8 +243,6 @@ class ParserTest(SqltoolsTest):
         token = sqlparse.parse(sql)[0]
         tn = TreeNode(State.WHERE)
         Parser.handle_where(tn, token)
-
-        self.print_tree(tn)
 
         self.assertTreeEqual(tn, node)
 

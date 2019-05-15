@@ -13,8 +13,12 @@ class Sequence:
             found = False
             for r in right.children:
                 if r.value == l.value and r.type == l.type:
-                    candidate = candidate and Sequence.compare(l, r)
-                    found = True
+                    res = Sequence.compare(l, r)
+                    candidate = candidate and res
+                    found = True 
+
+                    if res:
+                        l.attr['status'] = Seq.copy
                     break
 
             if not found:
@@ -30,15 +34,20 @@ class Sequence:
                     break
 
             if not found:
-                candidate = False
                 left.attr['insert'].append(r)
         
-        if candidate:
-            left.attr['status'] = Seq.copy
-        else:
-            left.attr['status'] = Seq.copyandchange
 
-        return candidate
+        for l in left.children:
+            if l.attr['status'] != Seq.copy:
+                left.attr['status'] = Seq.copyandchange
+                return False
+
+        if len(left.attr['insert']) > 0:
+            left.attr['status'] = Seq.copyandchange
+            return False
+
+        left.attr['status'] = Seq.copy
+        return True
 
     @staticmethod
     def generate_sequence(left, right):
@@ -110,6 +119,20 @@ class Sequence:
 
         permutes = [Seq.copy.name, Seq.remove.name, Seq.copyandchange.name]
 
+        while idx < len(sequence) and sequence[idx] not in permutes:
+            if '[' in sequence[idx]:
+                if sequence[idx][:3] == 'COL':
+                    col = remove_front_sqbracket(sequence[idx])
+                    n = TreeNode(State.COL, value=col)
+                    node.children.append(n)
+                else:
+                    col = remove_front_sqbracket(sequence[idx])
+                    n = TreeNode(State.AGG, value=col)
+                    node.children.append(n)
+            else:
+                break
+            idx += 1
+
         new_sequence = []
         while idx < len(sequence) and sequence[idx] not in permutes:
             new_sequence.append(sequence[idx])
@@ -137,7 +160,10 @@ def generate_sequence_sql(left, right):
     left, right = to_tree(left), to_tree(right)
     Sequence.compare(left, right)
 
-    return Sequence.generate_sequence(left, right)
+    tree_print(left, highlights=['status', 'insert'])
+
+    seq = Sequence.generate_sequence(left, right)
+    return seq
 
 def apply_sequence(tree, sequence):
     Sequence.apply_sequence(tree, sequence, 0)

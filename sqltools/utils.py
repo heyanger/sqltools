@@ -1,6 +1,8 @@
 import re
 import sqlparse
 
+from collections import deque
+
 t = sqlparse.tokens.Token
 
 def get_toks(tokens):
@@ -49,6 +51,35 @@ def inbetween_toks_multi(tokens, left, left_value, rights):
 
     return tokens[l: r]
             
+def tree_print(node, highlights=None):
+    q = deque([[node, 0]])
+    cur_level = 0
+
+    while q:
+        node, level = q.pop()
+        
+        if level != cur_level:
+            print()
+            print('-----')
+            cur_level = level
+        
+        if node.value:
+            print(node.type.name+'['+node.value+']', end='')
+        else:
+            print(node.type.name, end = '')
+
+        if highlights is not None:
+            print('{',end='')
+            for highlight in highlights:
+                if highlight is not None and highlight in node.attr:
+                    print(node.attr[highlight],end=',')
+            print('}',end='')
+        print(',',end='')
+
+        for c in node.children:
+            q.appendleft([c, level + 1])
+    print()
+
 
 def smart_find(sentence, word):
     bracket_count = 0
@@ -131,3 +162,13 @@ def remove_front_sqbracket(sentence):
         return sentence
 
     return sentence[l+1:r]
+
+def get_front_sqbracket(sentence):
+    l = sentence.find('[')
+    r = sentence.rfind(']')
+
+    if l == -1 or r == -1:
+        return sentence
+
+    return sentence[:l]
+    

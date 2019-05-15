@@ -87,12 +87,12 @@ class Parser:
         for c in cols:
             if type(c) is sqlparse.sql.IdentifierList:
                 for k in c.tokens:
-                    if type(k) is sqlparse.sql.Function or type(k) is sqlparse.sql.Identifier:
+                    if type(k) is sqlparse.sql.Function or type(k) is sqlparse.sql.Identifier or (type(k) is sqlparse.sql.Token and k.value == '*'):
                         new_node = TreeNode(State.COL)
                         Parser.handle(new_node, k)
                         node.children.append(new_node)
 
-            if type(c) is sqlparse.sql.Function or type(c) is sqlparse.sql.Identifier:
+            if type(c) is sqlparse.sql.Function or type(c) is sqlparse.sql.Identifier or (type(c) is sqlparse.sql.Token and c.value == '*'):
                 new_node = TreeNode(State.COL)
                 Parser.handle(new_node, c)
                 node.children.append(new_node)
@@ -252,6 +252,7 @@ class Unparser:
         return res
     
     def unparse_col(node):
+        print(node.value)
         res = node.value
 
         for c in node.children:
