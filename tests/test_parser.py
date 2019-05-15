@@ -427,4 +427,27 @@ class ParserTest(SqltoolsTest):
         self.print_tree(tn)
 
         self.assertTreeEqual(tn, node)
+
+    def test_tables_6(self):
+        node = TreeNode(State.ROOT)
+        node.children.append(TreeNode(State.NONE))
+        node.children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children.append(TreeNode(State.COL, value="instructor.salary"))
+        node.children[0].children[0].children.append(TreeNode(State.COL, value="instructor.hours"))
+        node.children[0].children.append(TreeNode(State.LIMIT, value='1'))
+
+        node.children[0].children[0].attr['tables']= ['instructor', 'othertable']
+        
+        sql = "SELECT t1.salary, hours FROM instructor AS t1 JOIN othertable AS t2 LIMIT 1"
+
+        table_info = {
+            'instructor': ['salary', 'hours'],
+            'othertable': ['abc']
+        }
+
+        tn = to_tree(sql, table_info)
+
+        self.print_tree(tn)
+
+        self.assertTreeEqual(tn, node)
     

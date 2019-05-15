@@ -15,6 +15,21 @@ tree = to_tree(sql)
 parsed = to_sql(tree)
 ```
 
+### Support for tables
+```python
+from sqltools.parser import to_tree, to_sql
+
+sql = "SELECT t1.salary, hours FROM instructor AS t1 JOIN othertable AS t2 LIMIT 1"
+
+table_info = {
+    'instructor': ['salary', 'hours'],
+    'othertable': ['abc']
+}
+
+tree = to_tree(sql, table_info)
+parsed = to_sql(tree)
+```
+
 ### Generating an edit sequence and apply sequence
 ```python
 from sqltools.parser import to_tree, to_sql
