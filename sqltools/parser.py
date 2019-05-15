@@ -252,7 +252,6 @@ class Unparser:
         return res
     
     def unparse_col(node):
-        print(node.value)
         res = node.value
 
         for c in node.children:

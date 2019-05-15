@@ -160,8 +160,6 @@ def generate_sequence_sql(left, right):
     left, right = to_tree(left), to_tree(right)
     Sequence.compare(left, right)
 
-    tree_print(left, highlights=['status', 'insert'])
-
     seq = Sequence.generate_sequence(left, right)
     return seq
 
