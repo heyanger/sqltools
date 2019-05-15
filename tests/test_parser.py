@@ -252,14 +252,14 @@ class ParserTest(SqltoolsTest):
         node.children[0].children.append(TreeNode(State.ROOT))
         node.children[0].children[0].children.append(TreeNode(State.NONE))
         node.children[0].children[0].children[0].children.append(TreeNode(State.SELECT))
-        node.children[0].children[0].children[0].children[0].children.append(TreeNode(State.COL, value="SourceAirport"))
+        node.children[0].children[0].children[0].children[0].children.append(TreeNode(State.COL, value="sourceairport"))
         node.children[0].children.append(TreeNode(State.ROOT))
         node.children[0].children[1].children.append(TreeNode(State.NONE))
         node.children[0].children[1].children[0].children.append(TreeNode(State.SELECT))
-        node.children[0].children[1].children[0].children[0].children.append(TreeNode(State.COL, value="DestAirport"))
+        node.children[0].children[1].children[0].children[0].children.append(TreeNode(State.COL, value="destairport"))
 
-        node.children[0].children[0].children[0].children[0].attr['tables']= ['Flights']
-        node.children[0].children[1].children[0].children[0].attr['tables']= ['Flights']
+        node.children[0].children[0].children[0].children[0].attr['tables']= ['flights']
+        node.children[0].children[1].children[0].children[0].attr['tables']= ['flights']
 
         sql = "SELECT SourceAirport FROM Flights UNION SELECT DestAirport FROM Flights"
         token = sqlparse.parse(sql)[0]
@@ -275,9 +275,9 @@ class ParserTest(SqltoolsTest):
         root = TreeNode(State.ROOT)
         root.children.append(TreeNode(State.NONE))
         root.children[0].children.append(TreeNode(State.SELECT))
-        root.children[0].children[0].children.append(TreeNode(State.COL, value="AirportName"))
+        root.children[0].children[0].children.append(TreeNode(State.COL, value="airportname"))
         root.children[0].children.append(TreeNode(State.WHERE))
-        root.children[0].children[1].children.append(TreeNode(State.COL, value="AirportCode"))
+        root.children[0].children[1].children.append(TreeNode(State.COL, value="airportcode"))
         root.children[0].children[1].children[0].children.append(TreeNode(State.OP, value="not in"))
 
         node = TreeNode(State.ROOT)
@@ -285,17 +285,17 @@ class ParserTest(SqltoolsTest):
         node.children[0].children.append(TreeNode(State.ROOT))
         node.children[0].children[0].children.append(TreeNode(State.NONE))
         node.children[0].children[0].children[0].children.append(TreeNode(State.SELECT))
-        node.children[0].children[0].children[0].children[0].children.append(TreeNode(State.COL, value="SourceAirport"))
+        node.children[0].children[0].children[0].children[0].children.append(TreeNode(State.COL, value="sourceairport"))
         node.children[0].children.append(TreeNode(State.ROOT))
         node.children[0].children[1].children.append(TreeNode(State.NONE))
         node.children[0].children[1].children[0].children.append(TreeNode(State.SELECT))
-        node.children[0].children[1].children[0].children[0].children.append(TreeNode(State.COL, value="DestAirport"))
+        node.children[0].children[1].children[0].children[0].children.append(TreeNode(State.COL, value="destairport"))
 
         root.children[0].children[1].children[0].children[0].children.append(node)
 
-        root.children[0].children[0].attr['tables']= ['Airports']
-        node.children[0].children[0].children[0].children[0].attr['tables']= ['Flights']
-        node.children[0].children[1].children[0].children[0].attr['tables']= ['Flights']
+        root.children[0].children[0].attr['tables']= ['airports']
+        node.children[0].children[0].children[0].children[0].attr['tables']= ['flights']
+        node.children[0].children[1].children[0].children[0].attr['tables']= ['flights']
 
         sql = "SELECT AirportName FROM Airports WHERE AirportCode NOT IN (SELECT SourceAirport FROM Flights UNION SELECT DestAirport FROM Flights)"
         token = sqlparse.parse(sql)[0]
@@ -438,10 +438,10 @@ class ParserTest(SqltoolsTest):
 
         node.children[0].children[0].attr['tables']= ['instructor', 'othertable']
         
-        sql = "SELECT t1.salary, hours FROM instructor AS t1 JOIN othertable AS t2 LIMIT 1"
+        sql = "SELECT t1.salary, hours FROM insTructor AS t1 JOIN othertable AS t2 LIMIT 1"
 
         table_info = {
-            'instructor': ['salary', 'hours'],
+            'Instructor': ['salary', 'hours'],
             'othertable': ['abc']
         }
 

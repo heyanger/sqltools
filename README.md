@@ -35,8 +35,8 @@ parsed = to_sql(tree)
 from sqltools.parser import to_tree, to_sql
 from sqltools.sequence import generate_sequence, apply_sequence_sql
 
-sql1 = "SELECT * FROM Owners"
-sql2 = "SELECT count(*) FROM Owners WHERE state = 'Arizona'"
+sql1 = "SELECT * FROM owners"
+sql2 = "SELECT count(*) FROM owners WHERE state = 'Arizona'"
 
 # SQL based
 sequence = generate_sequence_sql(sql1, sql2)

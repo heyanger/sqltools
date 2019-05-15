@@ -86,12 +86,13 @@ class Parser:
 
         for tbl in table_info:
             for col in table_info[tbl]:
-                col_map[col] = tbl+'.'+col
+                col_map[col.lower()] = tbl.lower()+'.'+col.lower()
                 
         return col_map
 
     @staticmethod
     def generate_col_name(value, col_map=None):
+        value = value.lower()
         if col_map is None or value not in col_map:
             return value
         
@@ -140,8 +141,8 @@ class Parser:
         for idx, tok in enumerate(cur_tokens):
             if type(tok) is sqlparse.sql.Token and tok.ttype is t.Keyword and tok.value.lower() == 'as':
                 # assume FROM contains only names, AS and identifiers
-                previous = cur_tokens[idx-1].value+'.'
-                nxt = cur_tokens[idx+1].value+'.'
+                previous = cur_tokens[idx-1].value.lower()+'.'
+                nxt = cur_tokens[idx+1].value.lower()+'.'
 
                 col_pair.append((previous, nxt))
 
@@ -162,7 +163,7 @@ class Parser:
         res = []
         for tok in token.tokens:
             if type(tok) is sqlparse.sql.Token and tok.ttype is t.Name:
-                res.append(tok.value)
+                res.append(tok.value.lower())
 
         return res
         
