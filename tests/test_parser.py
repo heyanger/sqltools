@@ -304,3 +304,127 @@ class ParserTest(SqltoolsTest):
         Parser.handle(tn, token)
         
         self.assertTreeEqual(tn, root)
+
+    def test_tables_1(self):
+        node = TreeNode(State.ROOT)
+        node.children.append(TreeNode(State.NONE))
+        node.children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children.append(TreeNode(State.COL, value="instructor.salary"))
+        node.children[0].children.append(TreeNode(State.LIMIT, value='1'))
+
+        node.children[0].children[0].attr['tables']= ['instructor']
+        
+        sql = "SELECT salary FROM instructor LIMIT 1"
+        token = sqlparse.parse(sql)[0]
+
+        tn = TreeNode(State.ROOT)
+        Parser.handle(tn, token, col_map={'salary': 'instructor.salary'})
+
+        self.print_tree(tn)
+
+        self.assertTreeEqual(tn, node)
+    
+    def test_tables_2(self):
+        node = TreeNode(State.ROOT)
+        node.children.append(TreeNode(State.NONE))
+        node.children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children.append(TreeNode(State.COL, value="instructor.salary"))
+        node.children[0].children.append(TreeNode(State.LIMIT, value='1'))
+
+        node.children[0].children[0].attr['tables']= ['instructor']
+        
+        sql = "SELECT t1.salary FROM instructor AS t1 LIMIT 1"
+        token = sqlparse.parse(sql)[0]
+
+        tn = TreeNode(State.ROOT)
+        Parser.handle(tn, token, col_map={'t1.salary': 'instructor.salary'})
+
+        self.print_tree(tn)
+
+        self.assertTreeEqual(tn, node)
+
+    def test_tables_3(self):
+        node = TreeNode(State.ROOT)
+        node.children.append(TreeNode(State.NONE))
+        node.children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children.append(TreeNode(State.COL, value="instructor.salary"))
+        node.children[0].children.append(TreeNode(State.LIMIT, value='1'))
+
+        node.children[0].children[0].attr['tables']= ['instructor', 'othertable']
+        
+        sql = "SELECT t1.salary FROM instructor AS t1 JOIN othertable AS t2 LIMIT 1"
+        token = sqlparse.parse(sql)[0]
+
+        tn = TreeNode(State.ROOT)
+        Parser.handle(tn, token, col_map={'t1.salary': 'instructor.salary'})
+
+        self.print_tree(tn)
+
+        self.assertTreeEqual(tn, node)
+
+    def test_tables_3(self):
+        node = TreeNode(State.ROOT)
+        node.children.append(TreeNode(State.NONE))
+        node.children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children.append(TreeNode(State.COL, value="instructor.salary"))
+        node.children[0].children.append(TreeNode(State.LIMIT, value='1'))
+
+        node.children[0].children[0].attr['tables']= ['instructor', 'othertable']
+        
+        sql = "SELECT salary FROM instructor AS t1 JOIN othertable AS t2 LIMIT 1"
+
+        table_info = {
+            'instructor': ['salary', 'hours'],
+            'othertable': ['abc']
+        }
+
+        tn = to_tree(sql, table_info)
+
+        self.print_tree(tn)
+
+        self.assertTreeEqual(tn, node)
+
+    def test_tables_4(self):
+        node = TreeNode(State.ROOT)
+        node.children.append(TreeNode(State.NONE))
+        node.children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children.append(TreeNode(State.COL, value="instructor.salary"))
+        node.children[0].children.append(TreeNode(State.LIMIT, value='1'))
+
+        node.children[0].children[0].attr['tables']= ['instructor', 'othertable']
+        
+        sql = "SELECT instructor.salary FROM instructor AS t1 JOIN othertable AS t2 LIMIT 1"
+
+        table_info = {
+            'instructor': ['salary', 'hours'],
+            'othertable': ['abc']
+        }
+
+        tn = to_tree(sql, table_info)
+
+        self.print_tree(tn)
+
+        self.assertTreeEqual(tn, node)
+
+    def test_tables_5(self):
+        node = TreeNode(State.ROOT)
+        node.children.append(TreeNode(State.NONE))
+        node.children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children.append(TreeNode(State.COL, value="instructor.salary"))
+        node.children[0].children.append(TreeNode(State.LIMIT, value='1'))
+
+        node.children[0].children[0].attr['tables']= ['instructor', 'othertable']
+        
+        sql = "SELECT t1.salary FROM instructor AS t1 JOIN othertable AS t2 LIMIT 1"
+
+        table_info = {
+            'instructor': ['salary', 'hours'],
+            'othertable': ['abc']
+        }
+
+        tn = to_tree(sql, table_info)
+
+        self.print_tree(tn)
+
+        self.assertTreeEqual(tn, node)
+    

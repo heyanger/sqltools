@@ -40,8 +40,8 @@ class SequenceTest(SqltoolsTest):
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
-    def test_apply_sequence_sql4(self):
-        sql1 = "SELECT * FROM Owners"
-        sql2 = "SELECT count(*) FROM Owners WHERE state = 'Arizona'"
+    # def test_apply_sequence_sql4(self):
+    #     sql1 = "SELECT * FROM Owners"
+    #     sql2 = "SELECT count(*) FROM Owners WHERE state = 'Arizona'"
 
-        self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
+    #     self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
