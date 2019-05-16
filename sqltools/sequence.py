@@ -10,13 +10,13 @@ class Sequence:
 
         candidate = True
 
-        for l in left.children:            
+        for l in left.children:
             found = False
             for r in right.children:
                 if r.value == l.value and r.type == l.type:
                     res = Sequence.compare(l, r)
                     candidate = candidate and res
-                    found = True 
+                    found = True
 
                     if res:
                         l.attr['status'] = Seq.copy
@@ -29,14 +29,14 @@ class Sequence:
 
         for r in right.children:
             found = False
-            for l in left.children:       
+            for l in left.children:
                 if r.value == l.value and r.type == l.type:
                     found = True
                     break
 
             if not found:
                 left.attr['insert'].append(r)
-        
+
 
         for l in left.children:
             if l.attr['status'] != Seq.copy:
@@ -84,7 +84,7 @@ class Sequence:
         attr = node.attr
 
         if 'status' not in attr:
-            return 
+            return
 
         if attr['status'] == Seq.copy or attr['status'] == Seq.remove:
             ls.append(attr['status'].name)
@@ -141,8 +141,8 @@ def generate_sequence(left, right):
     Sequence.compare(left, right)
     return Sequence.generate_sequence(left, right)
 
-def generate_sequence_sql(left, right):
-    left, right = to_tree(left), to_tree(right)
+def generate_sequence_sql(left, right, table_info=None):
+    left, right = to_tree(left, table_info), to_tree(right, table_info)
     Sequence.compare(left, right)
 
 
@@ -153,9 +153,18 @@ def apply_sequence(tree, sequence):
     Sequence.apply_sequence(tree, sequence, 0)
     return tree
 
-def apply_sequence_sql(sql, sequence):
-    tree = to_tree(sql)
+def apply_sequence_sql(sql, sequence, table_info=None):
+    tree = to_tree(sql, table_info)
     new_tree = apply_sequence(tree, sequence)
-    tree_print(new_tree, highlights=['status', 'insert'])
 
     return to_sql(new_tree)
+
+def get_sequence_nodes(tree, sequence):
+    """Returns a list of TreeNodes where each element in the list corresponds to the TreeNode
+    where the sequence is applied
+    :param sql: a TreeNode
+
+    :return: List of TreeNode
+    """
+    return []
+>>>>>>> 331f0570d15c77c5fbbcd82d534d5a4e8c18b1e1
