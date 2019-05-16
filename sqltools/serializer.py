@@ -59,8 +59,10 @@ class Serializer:
             return State.WHERE
         elif str == "COL":
             return State.COL
-        elif str == "GROUP BY":
+        elif str == "GROUP_BY":
             return State.GROUP_BY
+        elif str == "ORDER_BY":
+            return State.ORDER_BY
         elif str == "TERMINAL":
             return State.TERMINAL
         elif str == "LIMIT":
@@ -69,8 +71,6 @@ class Serializer:
             return State.AGG
         elif str == "OP":
             return State.OP
-        elif str == "ORDER BY":
-            return State.ORDER_BY
         elif str == "HAVING":
             return State.HAVING
 

@@ -19,7 +19,6 @@ class SequenceTest(SqltoolsTest):
         sql1 = 'SELECT count(*) FROM Professionals'
         sql2 = "SELECT count(*) FROM Professionals WHERE city = 'West Heidi'"
 
-        print(generate_sequence_sql(sql1, sql2))
         self.assertListEqual(generate_sequence_sql(sql1, sql2), ['copyandchange', 'copyandchange[WHERE(COL[city](OP[=](TERMINAL[\'West Heidi\'])))]', 'copy'])
 
     def test_apply_sequence_sql1(self):
@@ -44,22 +43,17 @@ class SequenceTest(SqltoolsTest):
         sql1 = "SELECT * FROM Owners"
         sql2 = "SELECT count(*) FROM owners WHERE state = 'Arizona'"
 
-        print(generate_sequence_sql(sql1, sql2))
-
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
     # def test_apply_sequence_sql5(self):
     #     sql1 = "select count(*) from dogs where dog_id in ( select dog_id from treatments )"
     #     sql2 = "select count(*) from dogs where dog_id not in ( select dog_id from treatments )"
     #
-    #     print(generate_sequence_sql(sql1, sql2))
     #     self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
     def test_apply_sequence_sql6(self):
         sql1 = "select count(*) from owners where state = 'vermont'"
         sql2 = "SELECT first_name, last_name, email_address FROM owners WHERE state like '%north%'"
-
-        print(generate_sequence_sql(sql1, sql2))
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
@@ -67,15 +61,16 @@ class SequenceTest(SqltoolsTest):
         sql1 = "select age from dogs order by age"
         sql2 = "SELECT count(*) FROM dogs WHERE age < 4"
 
-        print(generate_sequence_sql(sql1, sql2))
+        self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
+
+    def test_apply_sequence_sql8(self):
+        sql1 = "select transcript_date from transcripts order by transcript_date asc limit 1"
+        sql2 = "SELECT transcript_date FROM transcripts order by transcript_date desc LIMIT 1"
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
     def test_apply_sequence_sql8(self):
         sql1 = "select transcript_date from transcripts order by transcript_date asc limit 1"
-        sql2 = "SELECT transcript_date FROM transcripts order by transcript_date asc LIMIT 1"
-
-        print(generate_sequence_sql(sql1, sql2))
-        tree_print(to_tree(sql2))
+        sql2 = "SELECT transcript_date FROM transcripts group by transcript_date"
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)

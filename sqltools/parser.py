@@ -308,6 +308,8 @@ class Unparser:
             return Unparser.unparse_limit(node)
         elif node.type == State.ORDER_BY:
             return Unparser.unparse_orderby(node)
+        elif node.type == State.GROUP_BY:
+            return Unparser.unparse_groupby(node)
         elif node.type == State.TERMINAL:
             return Unparser.unparse_terminal(node)
 
@@ -321,6 +323,8 @@ class Unparser:
 
     def unparse_keyword(node):
         res = ""
+
+        Unparser.priority_sort(node)
 
         for c in node.children:
             res = res + Unparser.unparse(c)
@@ -355,10 +359,22 @@ class Unparser:
         for c in node.children:
             child.append(Unparser.unparse(c))
 
-        res = 'order by ' + ', '.join(child) + ' '
+        res = 'order by ' + ', '.join(child)
 
         if node.value is not None:
-            res = res + node.value + ' '
+            res = res + ' ' + node.value + ' '
+
+        return res
+
+    def unparse_groupby(node):
+        child = []
+        for c in node.children:
+            child.append(Unparser.unparse(c))
+
+        res = 'group by ' + ', '.join(child)
+
+        if node.value is not None:
+            res = res + ' ' + node.value + ' '
 
         return res
 
@@ -388,6 +404,20 @@ class Unparser:
 
     def unparse_terminal(node):
         return node.value
+
+    def priority_sort(node):
+        # VERY BAD SORTING ALG
+        priority_list = [State.SELECT, State.WHERE, State.GROUP_BY, State.ORDER_BY, State.LIMIT]
+        ordered_list = []
+
+        for type in priority_list:
+            for c in node.children:
+                if c.type == type:
+                    ordered_list.append(c)
+
+        node.children = ordered_list
+
+
 
 def to_tree(sql, table_info=None):
     """Converts a sql string into a tree of type TreeNode
