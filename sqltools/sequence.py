@@ -10,13 +10,13 @@ class Sequence:
 
         candidate = True
 
-        for l in left.children:            
+        for l in left.children:
             found = False
             for r in right.children:
                 if r.value == l.value and r.type == l.type:
                     res = Sequence.compare(l, r)
                     candidate = candidate and res
-                    found = True 
+                    found = True
 
                     if res:
                         l.attr['status'] = Seq.copy
@@ -29,14 +29,14 @@ class Sequence:
 
         for r in right.children:
             found = False
-            for l in left.children:       
+            for l in left.children:
                 if r.value == l.value and r.type == l.type:
                     found = True
                     break
 
             if not found:
                 left.attr['insert'].append(r)
-        
+
 
         for l in left.children:
             if l.attr['status'] != Seq.copy:
@@ -84,7 +84,7 @@ class Sequence:
         attr = node.attr
 
         if 'status' not in attr:
-            return 
+            return
 
         if attr['status'] == Seq.copy or attr['status'] == Seq.remove:
             ls.append(attr['status'].name)
@@ -94,6 +94,9 @@ class Sequence:
             ls.append(Seq.copyandchange.name)
         else:
             sql_string = Serializer.serialize(attr['insert'][0])
+            for i, n in enumerate(attr['insert']):
+                if i != 0:
+                    sql_string = sql_string + ',' + Serializer.serialize(n)
             ls.append(Seq.copyandchange.name + '[' + sql_string + ']')
 
         for c in node.children:
@@ -129,20 +132,19 @@ class Sequence:
     def apply_insert_sequence(node, inseq):
         if len(inseq) == 0:
             return
-
-        node.children.append(Serializer.deserialize(inseq))
+        content = Serializer.smart_split(inseq, ',')
+        for c in content:
+            node.children.append(Serializer.deserialize(c))
 
 def generate_sequence(left, right):
     left, right = left.clone(), right.clone()
     Sequence.compare(left, right)
-
     return Sequence.generate_sequence(left, right)
 
 def generate_sequence_sql(left, right, table_info=None):
     left, right = to_tree(left, table_info), to_tree(right, table_info)
     Sequence.compare(left, right)
 
-    # tree_print(left, highlights=['status', 'insert'])
 
     seq = Sequence.generate_sequence(left, right)
     return seq
@@ -154,6 +156,7 @@ def apply_sequence(tree, sequence):
 def apply_sequence_sql(sql, sequence, table_info=None):
     tree = to_tree(sql, table_info)
     new_tree = apply_sequence(tree, sequence)
+
     return to_sql(new_tree)
 
 def get_sequence_nodes(tree, sequence):
@@ -164,3 +167,4 @@ def get_sequence_nodes(tree, sequence):
     :return: List of TreeNode
     """
     return []
+>>>>>>> 331f0570d15c77c5fbbcd82d534d5a4e8c18b1e1
