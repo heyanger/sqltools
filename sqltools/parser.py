@@ -9,7 +9,7 @@ t = sqlparse.tokens.Token
 class Parser:
     IUE = ["intersect", "union", "except"]
     KEYWORDS = [(State.SELECT, None, 'SELECT'), (State.WHERE, sqlparse.sql.Where, None), (State.GROUP_BY, None, 'GROUP BY'), 
-        (State.LIMIT, None, 'LIMIT') , (State.ORDER_BY, None, 'ORDER BY')]
+        (State.ORDER_BY, None, 'ORDER BY'), (State.LIMIT, None, 'LIMIT')]
 
     def handle(node, token, col_map=None):
         if node.type == State.ROOT:
@@ -22,6 +22,8 @@ class Parser:
             Parser.handle_where(node, token, col_map)
         elif node.type == State.COL:
             Parser.handle_col(node, token, col_map)
+        elif node.type == State.ORDER_BY:
+            Parser.handle_orderby(node, token, col_map)
         elif node.type == State.GROUP_BY:
             Parser.handle_group(node, token, col_map)
         elif node.type == State.TERMINAL:
@@ -69,6 +71,31 @@ class Parser:
             leaf_node = TreeNode(State.TERMINAL, value=right.value)
 
         cn.children.append(leaf_node)
+
+    @staticmethod
+    def handle_orderby(node, tokens, col_map=None):
+        tok = None
+        if type(tokens[-1]) is sqlparse.sql.Token and tokens[-1].ttype == t.Keyword.Order:
+            assert(len(tokens) == 3)
+
+            node.value = tokens[-1].value.lower()
+
+            tok = tokens[1]
+        else:
+            assert(len(tokens) == 2)
+
+            child_tokens = get_toks(tokens[-1].tokens)
+
+            if type(child_tokens[-1]) is sqlparse.sql.Token and child_tokens[-1].ttype == t.Keyword.Order:
+                node.value = child_tokens[-1].value.lower()
+
+            child_node = TreeNode(State.COL)
+
+            tok = child_tokens[0]
+            
+        child_node = TreeNode(State.COL)
+        Parser.handle(child_node, tok)
+        node.children.append(child_node)
             
     @staticmethod
     def handle_col(node, token, col_map=None):
@@ -92,6 +119,9 @@ class Parser:
 
     @staticmethod
     def generate_col_name(value, col_map=None):
+        if value is '*':
+            return value
+
         value = value.lower()
         if col_map is None or value not in col_map:
             return value
@@ -274,6 +304,10 @@ class Unparser:
             return Unparser.unparse_col(node)
         elif node.type == State.OP:
             return Unparser.unparse_op(node)
+        elif node.type == State.LIMIT:
+            return Unparser.unparse_limit(node)
+        elif node.type == State.ORDER_BY:
+            return Unparser.unparse_orderby(node)
         elif node.type == State.TERMINAL:
             return Unparser.unparse_terminal(node)
         
@@ -296,8 +330,11 @@ class Unparser:
     def unparse_select(node):
         res = node.type.name.upper() + " "
 
+        cols = []
         for c in node.children:
-            res = res + Unparser.unparse(c)
+            cols.append(Unparser.unparse(c))
+
+        res = res + ', '.join(cols)
 
         res = res + " FROM "
 
@@ -312,6 +349,21 @@ class Unparser:
             res = res + Unparser.unparse(c)
 
         return res
+
+    def unparse_orderby(node):
+        child = []
+        for c in node.children:
+            child.append(Unparser.unparse(c))
+
+        res = 'order by ' + ', '.join(child) + ' ' 
+
+        if node.value is not None:
+            res = res + node.value + ' '
+
+        return res
+
+    def unparse_limit(node):
+        return State.LIMIT.name + ' ' + node.value
     
     def unparse_col(node):
         res = node.value

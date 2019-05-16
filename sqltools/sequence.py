@@ -120,7 +120,6 @@ class Sequence:
         node.children = list(filter(lambda x: 'remove' not in x.attr, node.children))
 
         if idn < len(sequence):
-            print(sequence[idn])
             if not sequence[idn] == Seq.copyandchange.name:
                 inseq = remove_front_sqbracket(sequence[idn]).split(',')
                 Sequence.apply_insert_sequence(node, inseq)
@@ -130,8 +129,6 @@ class Sequence:
     def apply_insert_sequence(node, inseq):
         if len(inseq) == 0:
             return
-
-        print(inseq)
 
         i = 0
         for content in inseq:
@@ -168,8 +165,8 @@ def generate_sequence(left, right):
 
     return Sequence.generate_sequence(left, right)
 
-def generate_sequence_sql(left, right):
-    left, right = to_tree(left), to_tree(right)
+def generate_sequence_sql(left, right, table_info=None):
+    left, right = to_tree(left, table_info), to_tree(right, table_info)
     Sequence.compare(left, right)
     seq = Sequence.generate_sequence(left, right)
     return seq
@@ -178,7 +175,16 @@ def apply_sequence(tree, sequence):
     Sequence.apply_sequence(tree, sequence, 0)
     return tree
 
-def apply_sequence_sql(sql, sequence):
-    tree = to_tree(sql)
+def apply_sequence_sql(sql, sequence, table_info=None):
+    tree = to_tree(sql, table_info)
     new_tree = apply_sequence(tree, sequence)
     return to_sql(new_tree)
+
+def get_sequence_nodes(tree, sequence):
+    """Returns a list of TreeNodes where each element in the list corresponds to the TreeNode
+    where the sequence is applied
+    :param sql: a TreeNode
+
+    :return: List of TreeNode
+    """
+    return []

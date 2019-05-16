@@ -16,3 +16,6 @@ class TreeNode:
             new_node.children.append(c.clone())
         
         return new_node
+
+    def num_child(self):
+        return len(self.children)
