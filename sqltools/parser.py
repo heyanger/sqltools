@@ -312,6 +312,8 @@ class Unparser:
             return Unparser.unparse_groupby(node)
         elif node.type == State.HAVING:
             return Unparser.unparse_having(node)
+        elif node.type == State.LOGIC:
+            return Unparser.unparse_logic(node)
         elif node.type == State.TERMINAL:
             return Unparser.unparse_terminal(node)
 
@@ -413,6 +415,11 @@ class Unparser:
                 res = res + '(' + Unparser.unparse(c) + ')'
             else:
                 res = res + Unparser.unparse(c)
+        return res
+
+    def unparse_logic(node):
+        res = " " + node.value + " "
+        res = Unparser.unparse(node.children[0]) + res + Unparser.unparse(node.children[1])
         return res
 
     def unparse_terminal(node):
