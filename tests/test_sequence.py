@@ -74,3 +74,9 @@ class SequenceTest(SqltoolsTest):
         sql2 = "SELECT transcript_date FROM transcripts group by transcript_date"
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
+
+    def test_apply_sequence_sql9(self):
+        sql1 = "select transcript_date from transcripts order by transcript_date asc limit 1"
+        sql2 = "SELECT transcript_date FROM transcripts group by transcript_date having transcript_date = 2"
+
+        self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)

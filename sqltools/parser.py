@@ -310,6 +310,8 @@ class Unparser:
             return Unparser.unparse_orderby(node)
         elif node.type == State.GROUP_BY:
             return Unparser.unparse_groupby(node)
+        elif node.type == State.HAVING:
+            return Unparser.unparse_having(node)
         elif node.type == State.TERMINAL:
             return Unparser.unparse_terminal(node)
 
@@ -371,10 +373,21 @@ class Unparser:
         for c in node.children:
             child.append(Unparser.unparse(c))
 
-        res = 'group by ' + ', '.join(child)
+        res = 'group by ' + child[0]
 
-        if node.value is not None:
-            res = res + ' ' + node.value + ' '
+        for str in child[1:]:
+            if str.startswith('having'):
+                res = res + ' ' + str
+            else:
+                res = res + ', ' + str
+
+        return res
+
+    def unparse_having(node):
+        res = node.type.name.lower() + ' '
+
+        for c in node.children:
+            res = res + Unparser.unparse(c)
 
         return res
 
