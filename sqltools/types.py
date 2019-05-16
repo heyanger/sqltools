@@ -20,4 +20,3 @@ class Seq(Enum):
     copy = auto()
     copyandchange = auto()
     remove = auto()
-    insert = auto()

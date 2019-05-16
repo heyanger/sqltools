@@ -9,9 +9,8 @@ class SequenceTest(SqltoolsTest):
         left.children.append(TreeNode(State.COL, value="salary"))
         left.children[0].children.append(TreeNode(State.AGG, value="max"))
         left.children.append(TreeNode(State.COL, value="department_name"))
-        
-        right = left.clone()
 
+        right = left.clone()
         seq = generate_sequence(left, right)
 
         self.assertListEqual(seq, ['copy'])
@@ -20,11 +19,13 @@ class SequenceTest(SqltoolsTest):
         sql1 = 'SELECT count(*) FROM Professionals'
         sql2 = "SELECT count(*) FROM Professionals WHERE city = 'West Heidi'"
 
-        self.assertListEqual(generate_sequence_sql(sql1, sql2), ['copyandchange', 'copyandchange[WHERE,COL[city],OP[=],TERMINAL[\'West Heidi\']]', 'copy'])
+        self.assertListEqual(generate_sequence_sql(sql1, sql2), ['copyandchange', 'copyandchange[WHERE(COL[city](OP[=](TERMINAL[\'West Heidi\'])))]', 'copy'])
 
     def test_apply_sequence_sql1(self):
         sql1 = 'SELECT count(*) FROM Professionals'
         sql2 = "SELECT count(*) FROM professionals WHERE city = 'West Heidi'"
+
+        print(generate_sequence_sql(sql1, sql2))
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
@@ -32,16 +33,31 @@ class SequenceTest(SqltoolsTest):
         sql1 = "SELECT * FROM AIRLINES WHERE Airline = \"JetBlue Airways\""
         sql2 = "SELECT country FROM airlines WHERE airline = \"JetBlue Airways\""
 
+        print(generate_sequence_sql(sql1, sql2))
+
+
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
     def test_apply_sequence_sql3(self):
         sql1 = "SELECT Country FROM AIRLINES WHERE Airline  =  \"JetBlue Airways\""
         sql2 = "SELECT * FROM airlines WHERE airline = \"JetBlue Airways\""
 
+        print(generate_sequence_sql(sql1, sql2))
+
+
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
-    # def test_apply_sequence_sql4(self):
-    #     sql1 = "SELECT * FROM Owners"
-    #     sql2 = "SELECT count(*) FROM Owners WHERE state = 'Arizona'"
+    def test_apply_sequence_sql4(self):
+        sql1 = "SELECT * FROM Owners"
+        sql2 = "SELECT count(*) FROM owners WHERE state = 'Arizona'"
 
+        print(generate_sequence_sql(sql1, sql2))
+
+        self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
+
+    # def test_apply_sequence_sql5(self):
+    #     sql1 = "select count(*) from dogs where dog_id in ( select dog_id from treatments )"
+    #     sql2 = "select count(*) from dogs where dog_id not in ( select dog_id from treatments )"
+    #
+    #     print(generate_sequence_sql(sql1, sql2))
     #     self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
