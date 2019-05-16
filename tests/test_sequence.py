@@ -80,3 +80,15 @@ class SequenceTest(SqltoolsTest):
         sql2 = "SELECT transcript_date FROM transcripts group by transcript_date having transcript_date = 2"
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
+
+    def test_apply_sequence_sql10(self):
+        sql1 = "select * from teacher where age = 32"
+        sql2 = "SELECT * FROM teacher WHERE age = 32 or age = 33"
+
+        self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
+
+    def test_apply_sequence_sql10(self):
+        sql1 = "select * from teacher where age = 32"
+        sql2 = "SELECT * FROM teacher WHERE age = 32 and age = 33"
+
+        self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)

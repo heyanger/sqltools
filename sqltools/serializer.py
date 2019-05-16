@@ -73,6 +73,8 @@ class Serializer:
             return State.OP
         elif str == "HAVING":
             return State.HAVING
+        elif str == "LOGIC":
+            return State.LOGIC
 
     def smart_split(str, splitter):
         paren_count = 0
