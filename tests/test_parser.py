@@ -15,8 +15,6 @@ class ParserTest(SqltoolsTest):
 
         Parser.handle_pair(tn, tokens)
 
-        self.print_tree(tn)
-
         self.assertTreeEqual(tn, node)
 
     def test_handle_pair2(self):
@@ -28,8 +26,6 @@ class ParserTest(SqltoolsTest):
 
         tn = TreeNode(State.ROOT)
         Parser.handle_pair(tn, sqlparse.parse('min(a) = 2')[0].tokens[0])
-
-        self.print_tree(tn)
 
         self.assertTreeEqual(tn, node)
 
@@ -402,8 +398,6 @@ class ParserTest(SqltoolsTest):
 
         tn = to_tree(sql, table_info)
 
-        self.print_tree(tn)
-
         self.assertTreeEqual(tn, node)
 
     def test_tables_5(self):
@@ -423,8 +417,6 @@ class ParserTest(SqltoolsTest):
         }
 
         tn = to_tree(sql, table_info)
-
-        self.print_tree(tn)
 
         self.assertTreeEqual(tn, node)
 
@@ -450,3 +442,63 @@ class ParserTest(SqltoolsTest):
         self.print_tree(tn)
 
         self.assertTreeEqual(tn, node)
+
+    def test_tables_7(self):
+        table_info = {
+            'airports': ['city', 'airportcode', 'airportname', 'country', 'countryabbrev', 'apid', 'name', 'city', 'country', 'x', 'y', 'elevation', 'iata', 'icao']
+        }
+
+        sql1 = 'select airports.city, airports.airportcode from airports where city = "anthony"'
+        sql2 = to_sql(to_tree(sql1, table_info)).lower()
+        
+        self.assertEqual(sql1, sql2)
+
+    def test_conv1(self):
+        sql1 = "select cost_of_treatment from treatments limit 1"
+        sql2 = to_sql(to_tree(sql1)).lower()
+
+        self.assertEqual(sql1, sql2)
+    
+    def test_orderby_1(self):
+        node = TreeNode(State.ROOT)
+        node.children.append(TreeNode(State.NONE))
+        node.children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children.append(TreeNode(State.COL, value="cost_of_treatment"))
+        node.children[0].children.append(TreeNode(State.ORDER_BY, value='desc'))
+        node.children[0].children[1].children.append(TreeNode(State.COL, value="date_of_treatment"))
+
+        node.children[0].children[0].attr['tables']= ['treatments']
+
+        sql = "select cost_of_treatment from treatments order by date_of_treatment DESC"
+
+        token = sqlparse.parse(sql)[0]
+        tn = TreeNode(State.ROOT)
+        Parser.handle(tn, token)
+
+        self.assertTreeEqual(tn, node)
+
+    def test_orderby_1(self):
+        node = TreeNode(State.ROOT)
+        node.children.append(TreeNode(State.NONE))
+        node.children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children.append(TreeNode(State.COL, value="cost_of_treatment"))
+        node.children[0].children.append(TreeNode(State.ORDER_BY, value='desc'))
+        node.children[0].children[1].children.append(TreeNode(State.COL, value="*"))
+        node.children[0].children[1].children[0].children.append(TreeNode(State.AGG, value="count"))
+
+        node.children[0].children[0].attr['tables']= ['treatments']
+
+        sql = "select cost_of_treatment from treatments order by count(*) DESC"
+
+        token = sqlparse.parse(sql)[0]
+        tn = TreeNode(State.ROOT)
+        Parser.handle(tn, token)
+
+        self.assertTreeEqual(tn, node)
+
+    def test_conv1(self):
+        sql1 = "select cost_of_treatment from treatments order by date_of_treatment desc limit 1"
+        sql2 = to_sql(to_tree(sql1)).lower()
+
+        self.assertEqual(sql1, sql2)
+

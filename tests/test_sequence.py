@@ -25,8 +25,6 @@ class SequenceTest(SqltoolsTest):
         sql1 = 'SELECT count(*) FROM Professionals'
         sql2 = "SELECT count(*) FROM professionals WHERE city = 'West Heidi'"
 
-        print(generate_sequence_sql(sql1, sql2))
-
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
     def test_apply_sequence_sql2(self):
