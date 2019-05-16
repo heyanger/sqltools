@@ -296,8 +296,10 @@ class Unparser:
     def unparse_select(node):
         res = node.type.name.upper() + " "
 
+        ls = []
         for c in node.children:
-            res = res + Unparser.unparse(c)
+            ls.append(Unparser.unparse(c))
+        res = res + ", ".join(ls)
 
         res = res + " FROM "
 

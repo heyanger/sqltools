@@ -94,6 +94,9 @@ class Sequence:
             ls.append(Seq.copyandchange.name)
         else:
             sql_string = Serializer.serialize(attr['insert'][0])
+            for i, n in enumerate(attr['insert']):
+                if i != 0:
+                    sql_string = sql_string + ',' + Serializer.serialize(n)
             ls.append(Seq.copyandchange.name + '[' + sql_string + ']')
 
         for c in node.children:
@@ -129,19 +132,19 @@ class Sequence:
     def apply_insert_sequence(node, inseq):
         if len(inseq) == 0:
             return
-        node.children.append(Serializer.deserialize(inseq))
+        content = Serializer.smart_split(inseq, ',')
+        for c in content:
+            node.children.append(Serializer.deserialize(c))
 
 def generate_sequence(left, right):
     left, right = left.clone(), right.clone()
     Sequence.compare(left, right)
-
     return Sequence.generate_sequence(left, right)
 
 def generate_sequence_sql(left, right):
     left, right = to_tree(left), to_tree(right)
     Sequence.compare(left, right)
 
-    # tree_print(left, highlights=['status', 'insert'])
 
     seq = Sequence.generate_sequence(left, right)
     return seq
@@ -154,4 +157,5 @@ def apply_sequence_sql(sql, sequence):
     tree = to_tree(sql)
     new_tree = apply_sequence(tree, sequence)
     tree_print(new_tree, highlights=['status', 'insert'])
+
     return to_sql(new_tree)
