@@ -1,4 +1,5 @@
 from sqltools.parser import *
+from sqltools.serializer import *
 
 class Sequence:
     @staticmethod
@@ -92,7 +93,8 @@ class Sequence:
         if len(attr['insert']) == 0:
             ls.append(Seq.copyandchange.name)
         else:
-            ls.append(Seq.copyandchange.name + '[' + ','.join(Sequence.node_to_sequence(attr['insert'][0]))+']')
+            sql_string = Serializer.serialize(attr['insert'][0])
+            ls.append(Seq.copyandchange.name + '[' + sql_string + ']')
 
         for c in node.children:
             Sequence.generate_sequence_text(c, ls)
@@ -112,16 +114,14 @@ class Sequence:
             if sequence[idx] == Seq.remove.name:
                 c.attr['remove'] = True
                 idx += 1
-            elif sequence[idx] == Seq.copy.name:
-                idx = Sequence.apply_sequence(c, sequence, idx)
-            elif sequence[idx].startswith(Seq.copyandchange.name):
+            elif sequence[idx] == Seq.copy.name or sequence[idx].startswith(Seq.copyandchange.name):
                 idx = Sequence.apply_sequence(c, sequence, idx)
 
         node.children = list(filter(lambda x: 'remove' not in x.attr, node.children))
 
         if idn < len(sequence):
             if not sequence[idn] == Seq.copyandchange.name:
-                inseq = remove_front_sqbracket(sequence[idn]).split(',')
+                inseq = remove_front_sqbracket(sequence[idn])
                 Sequence.apply_insert_sequence(node, inseq)
 
         return idx
@@ -130,34 +130,7 @@ class Sequence:
         if len(inseq) == 0:
             return
 
-        i = 0
-        for content in inseq:
-            if content[:3] == 'COL':
-                col = remove_front_sqbracket(content)
-                n = TreeNode(State.COL, value=col)
-                node.children.append(n)
-                i += 1
-            elif content[:3] == 'AGG':
-                col = remove_front_sqbracket(content)
-                n = TreeNode(State.AGG, value=col)
-                node.children.append(n)
-                i += 1
-            else:
-                break
-
-        if i < len(inseq):
-            seq = ' '.join(remove_front_sqbracket(s) for s in inseq)
-            token = sqlparse.parse(seq)[0]
-            Parser.handle(node, token)
-
-
-    def insert_np_sequence(node, sequence):
-        if len(sequence) == 0:
-            return
-
-        seq = ' '.join(remove_front_sqbracket(s) for s in sequence)
-        token = sqlparse.parse(seq)[0]
-        Parser.handle(node, token)
+        node.children.append(Serializer.deserialize(inseq))
 
 def generate_sequence(left, right):
     left, right = left.clone(), right.clone()
@@ -168,6 +141,9 @@ def generate_sequence(left, right):
 def generate_sequence_sql(left, right, table_info=None):
     left, right = to_tree(left, table_info), to_tree(right, table_info)
     Sequence.compare(left, right)
+
+    # tree_print(left, highlights=['status', 'insert'])
+
     seq = Sequence.generate_sequence(left, right)
     return seq
 
