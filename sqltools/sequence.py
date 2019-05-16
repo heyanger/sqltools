@@ -167,4 +167,3 @@ def get_sequence_nodes(tree, sequence):
     :return: List of TreeNode
     """
     return []
->>>>>>> 331f0570d15c77c5fbbcd82d534d5a4e8c18b1e1

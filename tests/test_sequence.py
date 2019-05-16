@@ -32,17 +32,11 @@ class SequenceTest(SqltoolsTest):
         sql1 = "SELECT * FROM AIRLINES WHERE Airline = \"JetBlue Airways\""
         sql2 = "SELECT country FROM airlines WHERE airline = \"JetBlue Airways\""
 
-        print(generate_sequence_sql(sql1, sql2))
-
-
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
     def test_apply_sequence_sql3(self):
         sql1 = "SELECT Country FROM AIRLINES WHERE Airline  =  \"JetBlue Airways\""
         sql2 = "SELECT * FROM airlines WHERE airline = \"JetBlue Airways\""
-
-        print(generate_sequence_sql(sql1, sql2))
-
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
@@ -79,7 +73,7 @@ class SequenceTest(SqltoolsTest):
 
     def test_apply_sequence_sql8(self):
         sql1 = "select transcript_date from transcripts order by transcript_date asc limit 1"
-        sql2 = "select transcript_date from transcripts order by transcript_date asc limit 1"
+        sql2 = "SELECT transcript_date FROM transcripts order by transcript_date asc LIMIT 1"
 
         print(generate_sequence_sql(sql1, sql2))
         tree_print(to_tree(sql2))
