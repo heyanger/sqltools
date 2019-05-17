@@ -71,6 +71,10 @@ class Serializer:
             return State.AGG
         elif str == "OP":
             return State.OP
+        elif str == "FROM":
+            return State.FROM
+        elif str == "TABLE":
+            return State.TABLE
         elif str == "HAVING":
             return State.HAVING
         elif str == "LOGIC":

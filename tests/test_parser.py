@@ -42,11 +42,11 @@ class ParserTest(SqltoolsTest):
 
     def test_select1(self):
         node = TreeNode(State.SELECT)
+        node.children.append(TreeNode(State.FROM))
+        node.children[0].children.append(TreeNode(State.TABLE, value='instructor'))
         node.children.append(TreeNode(State.COL, value="salary"))
-        node.children[0].children.append(TreeNode(State.AGG, value="max"))
+        node.children[1].children.append(TreeNode(State.AGG, value="max"))
         node.children.append(TreeNode(State.COL, value="department_name"))
-
-        node.attr['tables']= ['instructor']
 
         sql = "SELECT max(salary), department_name FROM instructor"
         token = sqlparse.parse(sql)[0]
@@ -54,18 +54,16 @@ class ParserTest(SqltoolsTest):
         tn = TreeNode(State.SELECT)
         Parser.handle_select(tn, token)
 
-        self.print_tree(tn)
-
         self.assertTreeEqual(tn, node)
 
     def test_select2(self):
         node = TreeNode(State.ROOT)
         node.children.append(TreeNode(State.NONE))
         node.children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children.append(TreeNode(State.FROM))
+        node.children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value="instructor"))
         node.children[0].children[0].children.append(TreeNode(State.COL, value="salary"))
         node.children[0].children.append(TreeNode(State.LIMIT, value='1'))
-
-        node.children[0].children[0].attr['tables']= ['instructor']
 
         sql = "SELECT salary FROM instructor LIMIT 1"
         token = sqlparse.parse(sql)[0]
@@ -73,23 +71,22 @@ class ParserTest(SqltoolsTest):
         tn = TreeNode(State.ROOT)
         Parser.handle(tn, token)
 
-        self.print_tree(tn)
-
         self.assertTreeEqual(tn, node)
+
 
     def test_root2(self):
         node = TreeNode(State.ROOT)
         node.children.append(TreeNode(State.NONE))
         node.children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children.append(TreeNode(State.FROM))
+        node.children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value='instructor'))
         node.children[0].children[0].children.append(TreeNode(State.COL, value="salary"))
-        node.children[0].children[0].children[0].children.append(TreeNode(State.AGG, value="max"))
+        node.children[0].children[0].children[1].children.append(TreeNode(State.AGG, value="max"))
         node.children[0].children[0].children.append(TreeNode(State.COL, value="department_name"))
         node.children[0].children.append(TreeNode(State.WHERE))
         node.children[0].children[1].children.append(TreeNode(State.COL, value="a"))
         node.children[0].children[1].children[0].children.append(TreeNode(State.OP, value="="))
         node.children[0].children[1].children[0].children[0].children.append(TreeNode(State.TERMINAL, value="2"))
-
-        node.children[0].children[0].attr['tables']= ['instructor']
 
         sql = "SELECT max(salary), department_name FROM instructor WHERE a = 2"
         token = sqlparse.parse(sql)[0]
@@ -97,19 +94,17 @@ class ParserTest(SqltoolsTest):
         tn = TreeNode(State.ROOT)
         Parser.handle(tn, token)
 
-        self.print_tree(tn)
-
         self.assertTreeEqual(tn, node)
 
     def test_root1(self):
         node = TreeNode(State.ROOT)
         node.children.append(TreeNode(State.NONE))
         node.children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children.append(TreeNode(State.FROM))
+        node.children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value='instructor'))
         node.children[0].children[0].children.append(TreeNode(State.COL, value="salary"))
-        node.children[0].children[0].children[0].children.append(TreeNode(State.AGG, value="max"))
+        node.children[0].children[0].children[1].children.append(TreeNode(State.AGG, value="max"))
         node.children[0].children[0].children.append(TreeNode(State.COL, value="department_name"))
-
-        node.children[0].children[0].attr['tables']= ['instructor']
 
         sql = "SELECT max(salary), department_name FROM instructor"
         token = sqlparse.parse(sql)[0]
@@ -123,13 +118,13 @@ class ParserTest(SqltoolsTest):
         node = TreeNode(State.ROOT)
         node.children.append(TreeNode(State.NONE))
         node.children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children.append(TreeNode(State.FROM))
+        node.children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value='instructor'))
         node.children[0].children[0].children.append(TreeNode(State.COL, value="salary"))
-        node.children[0].children[0].children[0].children.append(TreeNode(State.AGG, value="max"))
+        node.children[0].children[0].children[1].children.append(TreeNode(State.AGG, value="max"))
         node.children[0].children[0].children.append(TreeNode(State.COL, value="department_name"))
         node.children[0].children.append(TreeNode(State.GROUP_BY))
         node.children[0].children[1].children.append(TreeNode(State.COL, value="department_name"))
-
-        node.children[0].children[0].attr['tables']= ['instructor']
 
         sql = "SELECT max(salary), department_name FROM instructor GROUP BY department_name"
         token = sqlparse.parse(sql)[0]
@@ -153,9 +148,9 @@ class ParserTest(SqltoolsTest):
 
     def test_select4(self):
         node = TreeNode(State.SELECT)
+        node.children.append(TreeNode(State.FROM))
+        node.children[0].children.append(TreeNode(State.TABLE, value="instructor"))
         node.children.append(TreeNode(State.COL, value="*"))
-
-        node.attr['tables']= ['instructor']
 
         sql = "SELECT * FROM instructor"
         token = sqlparse.parse(sql)[0]
@@ -169,10 +164,10 @@ class ParserTest(SqltoolsTest):
 
     def test_select3(self):
         node = TreeNode(State.SELECT)
+        node.children.append(TreeNode(State.FROM))
+        node.children[0].children.append(TreeNode(State.TABLE, value="instructor"))
         node.children.append(TreeNode(State.COL, value="*"))
         node.children.append(TreeNode(State.COL, value="department_name"))
-
-        node.attr['tables']= ['instructor']
 
         sql = "SELECT *, department_name FROM instructor"
         token = sqlparse.parse(sql)[0]
@@ -213,10 +208,10 @@ class ParserTest(SqltoolsTest):
 
         newroot.children.append(TreeNode(State.NONE))
         newroot.children[0].children.append(TreeNode(State.SELECT))
+        newroot.children[0].children[0].children.append(TreeNode(State.FROM))
+        newroot.children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value="instructor"))
         newroot.children[0].children[0].children.append(TreeNode(State.COL, value="salary"))
-        newroot.children[0].children[0].children[0].children.append(TreeNode(State.AGG, value="avg"))
-
-        newroot.children[0].children[0].attr['tables']=  ['instructor']
+        newroot.children[0].children[0].children[1].children.append(TreeNode(State.AGG, value="avg"))
 
         sql = "GROUP BY department_name HAVING avg(salary) > (SELECT avg(salary) FROM instructor)"
         token = sqlparse.parse(sql)[0]
@@ -248,14 +243,15 @@ class ParserTest(SqltoolsTest):
         node.children[0].children.append(TreeNode(State.ROOT))
         node.children[0].children[0].children.append(TreeNode(State.NONE))
         node.children[0].children[0].children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children[0].children[0].children.append(TreeNode(State.FROM))
+        node.children[0].children[0].children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value='flights'))
         node.children[0].children[0].children[0].children[0].children.append(TreeNode(State.COL, value="sourceairport"))
         node.children[0].children.append(TreeNode(State.ROOT))
         node.children[0].children[1].children.append(TreeNode(State.NONE))
         node.children[0].children[1].children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[1].children[0].children[0].children.append(TreeNode(State.FROM))
+        node.children[0].children[1].children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value='flights'))
         node.children[0].children[1].children[0].children[0].children.append(TreeNode(State.COL, value="destairport"))
-
-        node.children[0].children[0].children[0].children[0].attr['tables']= ['flights']
-        node.children[0].children[1].children[0].children[0].attr['tables']= ['flights']
 
         sql = "SELECT SourceAirport FROM Flights UNION SELECT DestAirport FROM Flights"
         token = sqlparse.parse(sql)[0]
@@ -263,7 +259,7 @@ class ParserTest(SqltoolsTest):
         tn = TreeNode(State.ROOT)
         Parser.handle(tn, token)
 
-        self.print_tree(tn)
+        self.print_tree(node)
 
         self.assertTreeEqual(tn, node)
 
@@ -271,6 +267,8 @@ class ParserTest(SqltoolsTest):
         root = TreeNode(State.ROOT)
         root.children.append(TreeNode(State.NONE))
         root.children[0].children.append(TreeNode(State.SELECT))
+        root.children[0].children[0].children.append(TreeNode(State.FROM))
+        root.children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value="airports"))
         root.children[0].children[0].children.append(TreeNode(State.COL, value="airportname"))
         root.children[0].children.append(TreeNode(State.WHERE))
         root.children[0].children[1].children.append(TreeNode(State.COL, value="airportcode"))
@@ -281,17 +279,17 @@ class ParserTest(SqltoolsTest):
         node.children[0].children.append(TreeNode(State.ROOT))
         node.children[0].children[0].children.append(TreeNode(State.NONE))
         node.children[0].children[0].children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children[0].children[0].children.append(TreeNode(State.FROM))
+        node.children[0].children[0].children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value="flights"))
         node.children[0].children[0].children[0].children[0].children.append(TreeNode(State.COL, value="sourceairport"))
         node.children[0].children.append(TreeNode(State.ROOT))
         node.children[0].children[1].children.append(TreeNode(State.NONE))
         node.children[0].children[1].children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[1].children[0].children[0].children.append(TreeNode(State.FROM))
+        node.children[0].children[1].children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value="flights"))
         node.children[0].children[1].children[0].children[0].children.append(TreeNode(State.COL, value="destairport"))
 
         root.children[0].children[1].children[0].children[0].children.append(node)
-
-        root.children[0].children[0].attr['tables']= ['airports']
-        node.children[0].children[0].children[0].children[0].attr['tables']= ['flights']
-        node.children[0].children[1].children[0].children[0].attr['tables']= ['flights']
 
         sql = "SELECT AirportName FROM Airports WHERE AirportCode NOT IN (SELECT SourceAirport FROM Flights UNION SELECT DestAirport FROM Flights)"
         token = sqlparse.parse(sql)[0]
@@ -305,10 +303,10 @@ class ParserTest(SqltoolsTest):
         node = TreeNode(State.ROOT)
         node.children.append(TreeNode(State.NONE))
         node.children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children.append(TreeNode(State.FROM))
+        node.children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value="instructor"))
         node.children[0].children[0].children.append(TreeNode(State.COL, value="instructor.salary"))
         node.children[0].children.append(TreeNode(State.LIMIT, value='1'))
-
-        node.children[0].children[0].attr['tables']= ['instructor']
 
         sql = "SELECT salary FROM instructor LIMIT 1"
         token = sqlparse.parse(sql)[0]
@@ -324,10 +322,10 @@ class ParserTest(SqltoolsTest):
         node = TreeNode(State.ROOT)
         node.children.append(TreeNode(State.NONE))
         node.children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children.append(TreeNode(State.FROM))
+        node.children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value="instructor"))
         node.children[0].children[0].children.append(TreeNode(State.COL, value="instructor.salary"))
         node.children[0].children.append(TreeNode(State.LIMIT, value='1'))
-
-        node.children[0].children[0].attr['tables']= ['instructor']
 
         sql = "SELECT t1.salary FROM instructor AS t1 LIMIT 1"
         token = sqlparse.parse(sql)[0]
@@ -335,18 +333,17 @@ class ParserTest(SqltoolsTest):
         tn = TreeNode(State.ROOT)
         Parser.handle(tn, token, col_map={'t1.salary': 'instructor.salary'})
 
-        self.print_tree(tn)
-
         self.assertTreeEqual(tn, node)
 
     def test_tables_3(self):
         node = TreeNode(State.ROOT)
         node.children.append(TreeNode(State.NONE))
         node.children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children.append(TreeNode(State.FROM))
+        node.children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value="instructor"))
+        node.children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value="othertable"))
         node.children[0].children[0].children.append(TreeNode(State.COL, value="instructor.salary"))
         node.children[0].children.append(TreeNode(State.LIMIT, value='1'))
-
-        node.children[0].children[0].attr['tables']= ['instructor', 'othertable']
 
         sql = "SELECT t1.salary FROM instructor AS t1 JOIN othertable AS t2 LIMIT 1"
         token = sqlparse.parse(sql)[0]
@@ -362,10 +359,11 @@ class ParserTest(SqltoolsTest):
         node = TreeNode(State.ROOT)
         node.children.append(TreeNode(State.NONE))
         node.children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children.append(TreeNode(State.FROM))
+        node.children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value="instructor"))
+        node.children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value="othertable"))
         node.children[0].children[0].children.append(TreeNode(State.COL, value="instructor.salary"))
         node.children[0].children.append(TreeNode(State.LIMIT, value='1'))
-
-        node.children[0].children[0].attr['tables']= ['instructor', 'othertable']
 
         sql = "SELECT salary FROM instructor AS t1 JOIN othertable AS t2 LIMIT 1"
 
@@ -384,10 +382,11 @@ class ParserTest(SqltoolsTest):
         node = TreeNode(State.ROOT)
         node.children.append(TreeNode(State.NONE))
         node.children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children.append(TreeNode(State.FROM))
+        node.children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value="instructor"))
+        node.children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value="othertable"))
         node.children[0].children[0].children.append(TreeNode(State.COL, value="instructor.salary"))
         node.children[0].children.append(TreeNode(State.LIMIT, value='1'))
-
-        node.children[0].children[0].attr['tables']= ['instructor', 'othertable']
 
         sql = "SELECT instructor.salary FROM instructor AS t1 JOIN othertable AS t2 LIMIT 1"
 
@@ -404,10 +403,11 @@ class ParserTest(SqltoolsTest):
         node = TreeNode(State.ROOT)
         node.children.append(TreeNode(State.NONE))
         node.children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children.append(TreeNode(State.FROM))
+        node.children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value="instructor"))
+        node.children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value="othertable"))
         node.children[0].children[0].children.append(TreeNode(State.COL, value="instructor.salary"))
         node.children[0].children.append(TreeNode(State.LIMIT, value='1'))
-
-        node.children[0].children[0].attr['tables']= ['instructor', 'othertable']
 
         sql = "SELECT t1.salary FROM instructor AS t1 JOIN othertable AS t2 LIMIT 1"
 
@@ -424,11 +424,12 @@ class ParserTest(SqltoolsTest):
         node = TreeNode(State.ROOT)
         node.children.append(TreeNode(State.NONE))
         node.children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children.append(TreeNode(State.FROM))
+        node.children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value="instructor"))
+        node.children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value="othertable"))
         node.children[0].children[0].children.append(TreeNode(State.COL, value="instructor.salary"))
         node.children[0].children[0].children.append(TreeNode(State.COL, value="instructor.hours"))
         node.children[0].children.append(TreeNode(State.LIMIT, value='1'))
-
-        node.children[0].children[0].attr['tables']= ['instructor', 'othertable']
 
         sql = "SELECT t1.salary, hours FROM insTructor AS t1 JOIN othertable AS t2 LIMIT 1"
 
@@ -438,8 +439,6 @@ class ParserTest(SqltoolsTest):
         }
 
         tn = to_tree(sql, table_info)
-
-        self.print_tree(tn)
 
         self.assertTreeEqual(tn, node)
 
@@ -463,11 +462,11 @@ class ParserTest(SqltoolsTest):
         node = TreeNode(State.ROOT)
         node.children.append(TreeNode(State.NONE))
         node.children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children.append(TreeNode(State.FROM))
+        node.children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value="treatments"))
         node.children[0].children[0].children.append(TreeNode(State.COL, value="cost_of_treatment"))
         node.children[0].children.append(TreeNode(State.ORDER_BY, value='desc'))
         node.children[0].children[1].children.append(TreeNode(State.COL, value="date_of_treatment"))
-
-        node.children[0].children[0].attr['tables']= ['treatments']
 
         sql = "select cost_of_treatment from treatments order by date_of_treatment DESC"
 
@@ -481,12 +480,12 @@ class ParserTest(SqltoolsTest):
         node = TreeNode(State.ROOT)
         node.children.append(TreeNode(State.NONE))
         node.children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children.append(TreeNode(State.FROM))
+        node.children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value="treatments"))
         node.children[0].children[0].children.append(TreeNode(State.COL, value="cost_of_treatment"))
         node.children[0].children.append(TreeNode(State.ORDER_BY, value='desc'))
         node.children[0].children[1].children.append(TreeNode(State.COL, value="*"))
         node.children[0].children[1].children[0].children.append(TreeNode(State.AGG, value="count"))
-
-        node.children[0].children[0].attr['tables']= ['treatments']
 
         sql = "select cost_of_treatment from treatments order by count(*) DESC"
 

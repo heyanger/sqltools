@@ -152,11 +152,14 @@ class Parser:
     def handle_tables(node, tokens, col_map):
         tables = inbetween_toks_multi(tokens, sqlparse.sql.Token, 'from', [(y, z) for x, y, z in Parser.KEYWORDS[1:]])
 
-        node.attr['tables'] = []
+        cur_node = TreeNode(State.FROM)
+        node.children.append(cur_node)
 
         for t in tables[1:]:
             if type(t) is sqlparse.sql.Identifier:
-                node.attr['tables'].extend(Parser.generate_table_name(t))
+                child_node = TreeNode(State.TABLE, value=Parser.generate_table_name(t))
+
+                cur_node.children.append(child_node)
 
                 Parser.update_col_map(t, col_map)
 
@@ -190,12 +193,11 @@ class Parser:
 
     @staticmethod
     def generate_table_name(token):
-        res = []
         for tok in token.tokens:
             if type(tok) is sqlparse.sql.Token and tok.ttype is t.Name:
-                res.append(tok.value.lower())
+                return tok.value.lower()
 
-        return res
+        return ''
 
     staticmethod
     def handle_root(node, tokens, col_map=None):
@@ -298,6 +300,8 @@ class Unparser:
             return Unparser.unparse_keyword(node)
         elif node.type == State.SELECT:
             return Unparser.unparse_select(node)
+        elif node.type == State.TABLE:
+            return Unparser.unparse_table(node)
         elif node.type == State.WHERE:
             return Unparser.unparse_where(node)
         elif node.type == State.COL:
@@ -314,6 +318,8 @@ class Unparser:
             return Unparser.unparse_having(node)
         elif node.type == State.LOGIC:
             return Unparser.unparse_logic(node)
+        elif node.type == State.FROM:
+            return Unparser.unparse_from(node)
         elif node.type == State.TERMINAL:
             return Unparser.unparse_terminal(node)
 
@@ -339,16 +345,28 @@ class Unparser:
         res = node.type.name.upper() + " "
 
         cols = []
-        for c in node.children:
+        for c in node.children[1:]:
             cols.append(Unparser.unparse(c))
 
         res = res + ', '.join(cols)
 
         res = res + " FROM "
 
-        res = res + ', '.join(node.attr['tables']) + " "
+        res = res + Unparser.unparse(node.children[0]) + " "
 
         return res
+
+    def unparse_from(node):
+        res = ''
+        ls = []
+
+        for c in node.children:
+            ls.append(Unparser.unparse(c))
+
+        return ', '.join(ls)
+
+    def unparse_table(node):
+        return node.value
 
     def unparse_where(node):
         res = node.type.name.upper() + " "
