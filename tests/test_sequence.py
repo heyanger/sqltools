@@ -1,6 +1,7 @@
 from sqltools.sequence import *
 from sqltools.tree import *
 from sqltools.types import *
+from sqltools.parser import *
 from tests.testclass import SqltoolsTest
 
 class SequenceTest(SqltoolsTest):
@@ -20,6 +21,37 @@ class SequenceTest(SqltoolsTest):
         sql2 = "SELECT count(*) FROM Professionals WHERE city = 'West Heidi'"
 
         self.assertListEqual(generate_sequence_sql(sql1, sql2), ['copyandchange', 'copyandchange[WHERE(COL[city](OP[=](TERMINAL[\'West Heidi\'])))]', 'copy'])
+
+    def test_sql_sequence_linear(self):
+        sql1 = 'SELECT count(*) FROM Professionals'
+        sql2 = "SELECT count(*) FROM Professionals WHERE city = 'West Heidi'"
+
+        self.assertListEqual(generate_sequence_sql(sql1, sql2, linear_insert=True), ['copyandchange', 'copyandchange[WHERE city = \'West Heidi\']', 'copy'])
+
+    def test_applysql_sequence_linear(self):
+        sql1 = 'SELECT count(*) FROM professionals'
+        sql2 = "SELECT count(*) FROM professionals WHERE city = 'West Heidi'"
+
+        self.assertEqual(
+            apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2, linear_insert=True), linear_insert=True), sql2)
+
+    def test_sql_sequence_linear2(self):
+        sql1 = "select count(*) from owners where state = 'vermont'"
+        sql2 = "SELECT first_name, last_name, email_address, avg(num) FROM owners WHERE state = 'vermont'"
+
+        self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2, linear_insert=True), linear_insert=True), sql2)
+
+    def test_sql_sequence_linear3(self):
+        sql1 = "select count(*) from owners where state = 'vermont'"
+        sql2 = "SELECT first_name, last_name, email_address FROM owners WHERE state like '%north%'"
+
+        self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2, linear_insert=True), linear_insert=True), sql2)
+
+    def test_sql_sequence_linear4(self):
+        sql1 = "select count(*) from owners where state = 'vermont'"
+        sql2 = "SELECT first_name, last_name, email_address FROM owners WHERE state not in '%north%'"
+
+        self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2, linear_insert=True), linear_insert=True), sql2)
 
     def test_apply_sequence_sql1(self):
         sql1 = 'SELECT count(*) FROM Professionals'
