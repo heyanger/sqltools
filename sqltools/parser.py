@@ -493,7 +493,7 @@ class Unparser:
         for c in node.children:
             res = res + Unparser.unparse(c)
 
-        return res
+        return res + ' '
 
     def unparse_orderby(node):
         child = []
@@ -503,9 +503,9 @@ class Unparser:
         res = 'order by ' + ', '.join(child)
 
         if node.value is not None:
-            res = res + ' ' + node.value + ' '
+            res = res + ' ' + node.value
 
-        return res
+        return res + ' '
 
     def unparse_groupby(node):
         child = []
@@ -520,7 +520,7 @@ class Unparser:
             else:
                 res = res + ', ' + str
 
-        return res
+        return res + ' '
 
     def unparse_having(node):
         res = node.type.name.lower() + ' '

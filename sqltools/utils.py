@@ -138,7 +138,7 @@ def in_between_mult(sentence, left, words):
         v = smart_find(sentence.lower(), w.lower())
 
         if v >= 0:
-            r = min(x, v)
+            r = min(r, v)
 
     return sentence[l+len(left):r]
 

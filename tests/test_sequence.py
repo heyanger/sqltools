@@ -23,43 +23,43 @@ class SequenceTest(SqltoolsTest):
 
     def test_apply_sequence_sql1(self):
         sql1 = 'SELECT count(*) FROM Professionals'
-        sql2 = "SELECT count(*) FROM professionals WHERE city = 'West Heidi'"
+        sql2 = "SELECT count(*) FROM professionals WHERE city = 'West Heidi' "
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
     def test_apply_sequence_sql2(self):
         sql1 = "SELECT * FROM AIRLINES WHERE Airline = \"JetBlue Airways\""
-        sql2 = "SELECT country FROM airlines WHERE airline = \"JetBlue Airways\""
+        sql2 = "SELECT country FROM airlines WHERE airline = \"JetBlue Airways\" "
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
     def test_apply_sequence_sql3(self):
         sql1 = "SELECT Country FROM AIRLINES WHERE Airline  =  \"JetBlue Airways\""
-        sql2 = "SELECT * FROM airlines WHERE airline = \"JetBlue Airways\""
+        sql2 = "SELECT * FROM airlines WHERE airline = \"JetBlue Airways\" "
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
     def test_apply_sequence_sql4(self):
         sql1 = "SELECT * FROM Owners"
-        sql2 = "SELECT count(*) FROM owners WHERE state = 'Arizona'"
+        sql2 = "SELECT count(*) FROM owners WHERE state = 'Arizona' "
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
     def test_apply_sequence_sql5(self):
         sql1 = "select count(*) from dogs where dog_id in ( select dog_id from treatments )"
-        sql2 = "SELECT count(*) FROM dogs WHERE dog_id not in (SELECT dog_id FROM treatments )"
+        sql2 = "SELECT count(*) FROM dogs WHERE dog_id not in (SELECT dog_id FROM treatments ) "
     
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
     def test_apply_sequence_sql6(self):
         sql1 = "select count(*) from owners where state = 'vermont'"
-        sql2 = "SELECT first_name, last_name, email_address FROM owners WHERE state like '%north%'"
+        sql2 = "SELECT first_name, last_name, email_address FROM owners WHERE state like '%north%' "
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
     def test_apply_sequence_sql7(self):
         sql1 = "select age from dogs order by age"
-        sql2 = "SELECT count(*) FROM dogs WHERE age < 4"
+        sql2 = "SELECT count(*) FROM dogs WHERE age < 4 "
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
@@ -71,43 +71,43 @@ class SequenceTest(SqltoolsTest):
 
     def test_apply_sequence_sql8(self):
         sql1 = "select transcript_date from transcripts order by transcript_date asc limit 1"
-        sql2 = "SELECT transcript_date FROM transcripts group by transcript_date"
+        sql2 = "SELECT transcript_date FROM transcripts group by transcript_date "
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
     def test_apply_sequence_sql9(self):
         sql1 = "select transcript_date from transcripts order by transcript_date asc limit 1"
-        sql2 = "SELECT transcript_date FROM transcripts group by transcript_date having transcript_date = 2"
+        sql2 = "SELECT transcript_date FROM transcripts group by transcript_date having transcript_date = 2 "
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
     def test_apply_sequence_sql10(self):
         sql1 = "select * from teacher where age = 32"
-        sql2 = "SELECT * FROM teacher WHERE age = 32 or age = 33"
+        sql2 = "SELECT * FROM teacher WHERE age = 32 or age = 33 "
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
     def test_apply_sequence_sql10(self):
         sql1 = "select * from teacher where age = 32"
-        sql2 = "SELECT * FROM teacher WHERE age = 32 and age = 33"
+        sql2 = "SELECT * FROM teacher WHERE age = 32 and age = 33 "
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
     def test_apply_sequence_sql11(self):
         sql1 = "select age from singer where country = 'france'"
-        sql2 = "SELECT avg(age), min(age), max(age) FROM singer WHERE country = 'france'"
+        sql2 = "SELECT avg(age), min(age), max(age) FROM singer WHERE country = 'france' "
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
     def test_apply_sequence_sql12(self):
         sql1 = "select * from votes where state = 'ny' or state = 'ca'"
-        sql2 = "SELECT count(*) FROM votes WHERE state = 'ny' or state = 'ca'"
+        sql2 = "SELECT count(*) FROM votes WHERE state = 'ny' or state = 'ca' "
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
     def test_apply_sequence_with_distinct(self):
         sql1 = "select employee.name"
-        sql2 = "select employee.name where employee.employee_id not in (select evaluation.employee_id )"
+        sql2 = "select employee.name where employee.employee_id not in (select evaluation.employee_id ) "
 
         ignore = {
             State.FROM: True
@@ -126,9 +126,15 @@ class SequenceTest(SqltoolsTest):
 
     def test_apply_sequence_sql14(self):
         sql1 = "select country from singer where age > 20"
-        sql2 = "SELECT DISTINCT country FROM singer WHERE age > 20"
+        sql2 = "SELECT DISTINCT country FROM singer WHERE age > 20 "
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
+
+    # def test_apply_sequence_sql15(self):
+    #     sql1 = "select distinct car_names.model from tbl"
+    #     sql2 = "select car_names.model , car_names.make from tbl"
+
+    #     self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
     # def test_distinct_multiple(self):
     #     sql1 = "select distinct paintings.medium"

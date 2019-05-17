@@ -463,7 +463,7 @@ class ParserTest(SqltoolsTest):
             'airports': ['city', 'airportcode', 'airportname', 'country', 'countryabbrev', 'apid', 'name', 'city', 'country', 'x', 'y', 'elevation', 'iata', 'icao']
         }
 
-        sql1 = 'select airports.city, airports.airportcode from airports where airports.city = "anthony"'
+        sql1 = 'select airports.city, airports.airportcode from airports where airports.city = "anthony" '
         sql2 = to_sql(to_tree(sql1, table_info=table_info)).lower()
         
         self.assertEqual(sql1, sql2)
@@ -573,13 +573,13 @@ class ParserTest(SqltoolsTest):
         self.assertEqual(sql1.lower(), sql2.lower())
 
     def test_conv2(self):
-        sql1 = "select * from mytable WHERE col between 1 and 2"
+        sql1 = "select * from mytable WHERE col between 1 and 2 "
         sql2 = to_sql(to_tree(sql1))
 
         self.assertEqual(sql1.lower(), sql2.lower())
 
     def test_conv3(self):
-        sql1 = "select DISTINCT col from mytable WHERE col between 1 and 2"
+        sql1 = "select DISTINCT col from mytable WHERE col between 1 and 2 "
         sql2 = to_sql(to_tree(sql1))
 
         self.assertEqual(sql1.lower(), sql2.lower())
