@@ -114,45 +114,54 @@ class Parser:
     @staticmethod
     def handle_col_list(node, token, col_map=None):
         cur_tokens = get_toks(token)
-        OPS = ['=', '<', '>', '>=', '<=', '!=', 'like', 'not', 'between']
 
-        # for handle "state like 'a'", state is col name
-        if cur_tokens is not None and len(cur_tokens) >= 2 and cur_tokens[0].value in OPS:
-            n = node
-            op = cur_tokens[0].value
+        # for handle pair
+        if cur_tokens[0].value[-2:] != "()":
+            OPS = ['=', '<', '>', '>=', '<=', '!=', 'like', 'not', 'between']
 
-            if op.lower() != 'between':
+            # for handle "state like 'a'", state is col name
+            if cur_tokens is not None and len(cur_tokens) >= 2 and cur_tokens[0].value in OPS:
+                n = node
+                op = cur_tokens[0].value
 
-                if len(cur_tokens) > 2:
-                    op = ' '.join(c.value for c in cur_tokens[0:-1])
+                if op.lower() != 'between':
 
-                cn = TreeNode(State.OP, value=op.lower())
-                n.children.append(cn)
+                    if len(cur_tokens) > 2:
+                        op = ' '.join(c.value for c in cur_tokens[0:-1])
 
-                right = cur_tokens[-1]
-                leaf_node = None
+                    cn = TreeNode(State.OP, value=op.lower())
+                    n.children.append(cn)
 
-                if type(right) is sqlparse.sql.Parenthesis:
-                    leaf_node = TreeNode(State.ROOT)
-                    Parser.handle(leaf_node, right, col_map)
+                    right = cur_tokens[-1]
+                    leaf_node = None
+
+                    if type(right) is sqlparse.sql.Parenthesis:
+                        leaf_node = TreeNode(State.ROOT)
+                        Parser.handle(leaf_node, right, col_map)
+                    else:
+                        leaf_node = TreeNode(State.TERMINAL, value=right.value)
+
+                    cn.children.append(leaf_node)
+
+                # between
                 else:
-                    leaf_node = TreeNode(State.TERMINAL, value=right.value)
+                    cn = TreeNode(State.OP, value=op.lower())
+                    n.children.append(cn)
+                    right_1 = cur_tokens[-3]
+                    right_2 = cur_tokens[-1]
+                    leaf_node_1 = TreeNode(State.TERMINAL, value=right_1.value)
+                    leaf_node_2 = TreeNode(State.TERMINAL, value=right_2.value)
+                    cn.children.append(leaf_node_1)
+                    cn.children.append(leaf_node_2)
 
-                cn.children.append(leaf_node)
-
-            # between
-            else:
-                cn = TreeNode(State.OP, value=op.lower())
-                n.children.append(cn)
-                right_1 = cur_tokens[-3]
-                right_2 = cur_tokens[-1]
-                leaf_node_1 = TreeNode(State.TERMINAL, value=right_1.value)
-                leaf_node_2 = TreeNode(State.TERMINAL, value=right_2.value)
-                cn.children.append(leaf_node_1)
-                cn.children.append(leaf_node_2)
+        # for handle agg
+        else:
+            n = TreeNode(State.AGG, value=cur_tokens[0].value[0:-2])
+            node.children.append(n)
 
     @staticmethod
     def handle_col(node, token, col_map=None):
+        # handle for desequenced
         if type(token) is list:
             Parser.handle_col_list(node, token, col_map)
             return
@@ -327,9 +336,18 @@ class Parser:
 
     @staticmethod
     def handle_where(node, tokens, col_map=None):
+        # print(tokens[0].value)
+        # for normal parser
         token = get_toks(tokens[0].tokens)
+        if token[0].value.lower() == 'where':
+            Parser.handle_logic(node, token[1:], col_map)
 
-        Parser.handle_logic(node, token[1:], col_map)
+        # for sequence,
+        # age = 32 and age = 33
+        # State.WHERE
+        else:
+            Parser.handle_logic(node, tokens, col_map)
+
 
     @staticmethod
     def handle_logic(node, tokens, col_map=None):
@@ -401,8 +419,14 @@ class Unparser:
             return Unparser.unparse_from(node)
         elif node.type == State.TERMINAL:
             return Unparser.unparse_terminal(node)
+        elif node.type == State.AGG:
+            return Unparser.unparse_agg(node)
 
         return ""
+
+    @staticmethod
+    def unparse_agg(node):
+        return node.value + '()'
 
     @staticmethod
     def unparse_root(node):

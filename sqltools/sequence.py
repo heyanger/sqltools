@@ -102,6 +102,8 @@ class Sequence:
                 ls.append(Seq.copyandchange.name + '[' + sql_string + ']')
             else:
                 sql_string = Unparser.unparse(attr['insert'][0])
+                print(attr['insert'][0].type)
+                print(attr['insert'][0].value)
                 for i, n in enumerate(attr['insert']):
                     if i != 0:
                         sql_string = sql_string + ',' + Unparser.unparse(n)
@@ -109,6 +111,7 @@ class Sequence:
 
         for c in node.children:
             Sequence.generate_sequence_text(c, ls, linear_insert)
+        print(ls)
 
     @staticmethod
     def apply_sequence(node, sequence, idx, linear_insert=False):
@@ -148,7 +151,9 @@ class Sequence:
             else:
                 # print(c)
                 tokens = sqlparse.parse(c)[0].tokens
+                print(tokens[0].value)
                 print(node.type)
+                print(type(tokens))
                 Parser.handle(node, tokens)
 
 def generate_sequence(left, right, table_info=None, linear_insert=False):
