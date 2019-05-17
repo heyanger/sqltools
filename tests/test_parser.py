@@ -501,3 +501,23 @@ class ParserTest(SqltoolsTest):
 
         self.assertEqual(sql1, sql2)
 
+    def test_between_1(self):
+        node = TreeNode(State.WHERE)
+        node.children.append(TreeNode(State.COL, value="col"))
+        node.children[0].children.append(TreeNode(State.OP, value='between'))
+        node.children[0].children[0].children.append(TreeNode(State.TERMINAL, value="1"))
+        node.children[0].children[0].children.append(TreeNode(State.TERMINAL, value="2"))
+
+        sql = "WHERE col between 1 and 2"
+        token = sqlparse.parse(sql)[0]
+        tn = TreeNode(State.WHERE)
+        Parser.handle_where(tn, token)
+
+        self.assertTreeEqual(tn, node)
+
+    #
+    def test_conv2(self):
+        sql1 = "select * from table WHERE col between 1 and 2"
+        sql2 = to_sql(to_tree(sql1))
+
+        self.assertEqual(sql1.lower(), sql2.lower())

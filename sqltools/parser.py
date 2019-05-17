@@ -50,27 +50,41 @@ class Parser:
 
         left = cur_tokens[0]
         op = cur_tokens[1].value
-        right = cur_tokens[-1]
-
-        if len(cur_tokens) > 3:
-            op = ' '.join(c.value for c in cur_tokens[1:-1])
 
         n = TreeNode(State.COL)
         Parser.handle(n, left, col_map)
         node.children.append(n)
 
-        cn = TreeNode(State.OP, value=op.lower())
-        n.children.append(cn)
+        if op.lower() != 'between':
 
-        leaf_node = None
+            if len(cur_tokens) > 3:
+                op = ' '.join(c.value for c in cur_tokens[1:-1])
 
-        if type(right) is sqlparse.sql.Parenthesis:
-            leaf_node = TreeNode(State.ROOT)
-            Parser.handle(leaf_node, right, col_map)
+            cn = TreeNode(State.OP, value=op.lower())
+            n.children.append(cn)
+
+            right = cur_tokens[-1]
+            leaf_node = None
+
+            if type(right) is sqlparse.sql.Parenthesis:
+                leaf_node = TreeNode(State.ROOT)
+                Parser.handle(leaf_node, right, col_map)
+            else:
+                leaf_node = TreeNode(State.TERMINAL, value=right.value)
+
+            cn.children.append(leaf_node)
+
+        # between
         else:
-            leaf_node = TreeNode(State.TERMINAL, value=right.value)
+            cn = TreeNode(State.OP, value=op.lower())
+            n.children.append(cn)
+            right_1 = cur_tokens[-3]
+            right_2 = cur_tokens[-1]
+            leaf_node_1 = TreeNode(State.TERMINAL, value=right_1.value)
+            leaf_node_2 = TreeNode(State.TERMINAL, value=right_2.value)
+            cn.children.append(leaf_node_1)
+            cn.children.append(leaf_node_2)
 
-        cn.children.append(leaf_node)
 
     @staticmethod
     def handle_orderby(node, tokens, col_map=None):
@@ -269,8 +283,22 @@ class Parser:
     def handle_logic(node, tokens, col_map=None):
         tokens = get_toks(tokens)
 
+        print(tokens)
+        print([type(t) for t in tokens])
+
+        have_between = False
+        process_between = False
+
         for idx, token in enumerate(tokens):
+            if type(token) is sqlparse.sql.Token and token.value.lower() == 'between':
+                have_between = True
+                continue
+
             if type(token) is sqlparse.sql.Token and token.value.lower() == 'and':
+                if have_between is True and process_between is False:
+                    process_between = True
+                    continue
+
                 new_node = TreeNode(State.LOGIC, value='and')
 
                 Parser.handle_logic(new_node, tokens[:idx], col_map)
@@ -291,6 +319,7 @@ class Parser:
                 return
 
         Parser.handle_pair(node, tokens)
+
 
 class Unparser:
     def unparse(node):
@@ -426,13 +455,19 @@ class Unparser:
         return res
 
     def unparse_op(node):
+
         res = " " + node.value + " "
 
-        for c in node.children:
-            if c.type == State.ROOT:
-                res = res + '(' + Unparser.unparse(c) + ')'
-            else:
-                res = res + Unparser.unparse(c)
+        if node.value.lower() != 'between':
+            for c in node.children:
+                if c.type == State.ROOT:
+                    res = res + '(' + Unparser.unparse(c) + ')'
+                else:
+                    res = res + Unparser.unparse(c)
+
+        else:
+            res = res + Unparser.unparse(node.children[0]) + ' and ' + Unparser.unparse(node.children[1])
+
         return res
 
     def unparse_logic(node):
