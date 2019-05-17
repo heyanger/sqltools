@@ -130,9 +130,14 @@ class SequenceTest(SqltoolsTest):
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
-
     def test_distinct_multiple(self):
         sql1 = "select distinct paintings.medium from tbl"
         sql2 = "select avg(paintings.height_mm), paintings.medium from tbl group by paintings.medium"
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
+        
+    def test_get_node_from_sequence(self):
+        sql1 = 'SELECT count(*) FROM Professionals'
+        sql2 = "SELECT count(*) FROM Professionals WHERE city = 'West Heidi'"
+
+        self.assertTreeEqual(get_node_from_sequence(tree, sequence[:2]), tree.children[0].children[0])
