@@ -27,16 +27,15 @@ class Sequence:
 
         left.attr['insert'] = []
 
-        for r in right.children:
+        for idx, r in enumerate(right.children):
             found = False
             for l in left.children:
                 if r.value == l.value and r.type == l.type:
                     found = True
                     break
 
-            if not found:
+            if not found or idx >= len(left.children):
                 left.attr['insert'].append(r)
-
 
         for l in left.children:
             if l.attr['status'] != Seq.copy:
@@ -144,6 +143,9 @@ def generate_sequence(left, right):
 def generate_sequence_sql(left, right, table_info=None):
     left, right = to_tree(left, table_info), to_tree(right, table_info)
     Sequence.compare(left, right)
+
+    tree_print(left, highlights=['status','insert'])
+
     seq = Sequence.generate_sequence(left, right)
     return seq
 
