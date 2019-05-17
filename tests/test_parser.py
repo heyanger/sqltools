@@ -515,9 +515,33 @@ class ParserTest(SqltoolsTest):
 
         self.assertTreeEqual(tn, node)
 
-    #
+    def test_join(self):
+        sql = "select a from owners as t1 join dogs as t2 on t1.owner_id  =  t2.owner_id"
+
+        node = TreeNode(State.ROOT)
+        node.children.append(TreeNode(State.NONE))
+        node.children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children.append(TreeNode(State.FROM))
+        node.children[0].children[0].children[0].children.append(TreeNode(State.JOIN))
+        node.children[0].children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value="owners"))
+        node.children[0].children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value="owner_id"))
+        node.children[0].children[0].children.append(TreeNode(State.COL))
+        node.children[0].children[0].children[0].children.append(TreeNode(State.TERMINAL, value="a"))
+
+        token = sqlparse.parse(sql)[0]
+        tn = TreeNode(State.WHERE)
+        # Parser.handle_where(tn, token)
+
+        # self.assertTreeEqual(tn, node)
+
     def test_conv2(self):
-        sql1 = "select * from table WHERE col between 1 and 2"
+        sql1 = "select * from mytable "
+        sql2 = to_sql(to_tree(sql1))
+
+        self.assertEqual(sql1.lower(), sql2.lower())
+
+    def test_conv2(self):
+        sql1 = "select * from mytable WHERE col between 1 and 2"
         sql2 = to_sql(to_tree(sql1))
 
         self.assertEqual(sql1.lower(), sql2.lower())

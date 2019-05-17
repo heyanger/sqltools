@@ -167,6 +167,7 @@ class Parser:
         tables = inbetween_toks_multi(tokens, sqlparse.sql.Token, 'from', [(y, z) for x, y, z in Parser.KEYWORDS[1:]])
 
         cur_node = TreeNode(State.FROM)
+
         node.children.append(cur_node)
 
         for t in tables[1:]:
@@ -282,9 +283,6 @@ class Parser:
     @staticmethod
     def handle_logic(node, tokens, col_map=None):
         tokens = get_toks(tokens)
-
-        print(tokens)
-        print([type(t) for t in tokens])
 
         have_between = False
         process_between = False

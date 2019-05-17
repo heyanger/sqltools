@@ -17,6 +17,7 @@ class State(Enum):
     LOGIC = auto()
     NONE = auto()
     IUE = auto()
+    JOIN = auto()
 
 class Seq(Enum):
     copy = auto()
