@@ -27,14 +27,16 @@ class Sequence:
 
         left.attr['insert'] = []
 
-        for idx, r in enumerate(right.children):
+        num_same = 0
+        for r in right.children:
             found = False
             for l in left.children:
                 if r.value == l.value and r.type == l.type:
                     found = True
+                    num_same += 1
                     break
 
-            if not found or idx >= len(left.children):
+            if not found or num_same > len(left.children):
                 left.attr['insert'].append(r)
 
         for l in left.children:
