@@ -96,6 +96,28 @@ class ParserTest(SqltoolsTest):
 
         self.assertTreeEqual(tn, node)
 
+    def test_root_ge(self):
+        node = TreeNode(State.ROOT)
+        node.children.append(TreeNode(State.NONE))
+        node.children[0].children.append(TreeNode(State.SELECT))
+        node.children[0].children[0].children.append(TreeNode(State.FROM))
+        node.children[0].children[0].children[0].children.append(TreeNode(State.TABLE, value='instructor'))
+        node.children[0].children[0].children.append(TreeNode(State.COL, value="salary"))
+        node.children[0].children[0].children[1].children.append(TreeNode(State.AGG, value="max"))
+        node.children[0].children[0].children.append(TreeNode(State.COL, value="department_name"))
+        node.children[0].children.append(TreeNode(State.WHERE))
+        node.children[0].children[1].children.append(TreeNode(State.COL, value="a"))
+        node.children[0].children[1].children[0].children.append(TreeNode(State.OP, value=">="))
+        node.children[0].children[1].children[0].children[0].children.append(TreeNode(State.TERMINAL, value="2"))
+
+        sql = "SELECT max(salary), department_name FROM instructor WHERE a >= 2"
+        token = sqlparse.parse(sql)[0]
+
+        tn = TreeNode(State.ROOT)
+        Parser.handle(tn, token)
+
+        self.assertTreeEqual(tn, node)
+
     def test_root1(self):
         node = TreeNode(State.ROOT)
         node.children.append(TreeNode(State.NONE))
@@ -570,4 +592,3 @@ class ParserTest(SqltoolsTest):
         sql2 = to_sql(tree).strip()
 
         self.assertEqual(sql1.lower(), sql2.lower())
-    

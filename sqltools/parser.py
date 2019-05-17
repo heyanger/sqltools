@@ -90,15 +90,16 @@ class Parser:
     @staticmethod
     def handle_orderby(node, tokens, col_map=None, ignore=None):
         tok = None
-        if type(tokens[-1]) is sqlparse.sql.Token and tokens[-1].ttype == t.Keyword.Order:
-            assert(len(tokens) == 3)
-
+        
+        if len(tokens) == 3 and type(tokens[-1]) is sqlparse.sql.Token and tokens[-1].ttype == t.Keyword.Order:
             node.value = tokens[-1].value.lower()
 
             tok = tokens[1]
-        else:
-            assert(len(tokens) == 2)
 
+            child_node = TreeNode(State.COL)
+            Parser.handle(child_node, tok, col_map, ignore)
+            node.children.append(child_node)
+        elif len(tokens) == 2:
             child_tokens = get_toks(tokens[-1].tokens)
 
             if type(child_tokens[-1]) is sqlparse.sql.Token and child_tokens[-1].ttype == t.Keyword.Order:
@@ -108,9 +109,10 @@ class Parser:
 
             tok = child_tokens[0]
 
-        child_node = TreeNode(State.COL)
-        Parser.handle(child_node, tok, col_map, ignore)
-        node.children.append(child_node)
+            child_node = TreeNode(State.COL)
+            Parser.handle(child_node, tok, col_map, ignore)
+            node.children.append(child_node)
+    
 
     @staticmethod
     def handle_col(node, token, col_map=None, ignore=None):

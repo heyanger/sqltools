@@ -129,3 +129,10 @@ class SequenceTest(SqltoolsTest):
         sql2 = "SELECT DISTINCT country FROM singer WHERE age > 20"
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
+
+
+    def test_distinct_multiple(self):
+        sql1 = "select distinct paintings.medium from tbl"
+        sql2 = "select avg(paintings.height_mm), paintings.medium from tbl group by paintings.medium"
+
+        self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
