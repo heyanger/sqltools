@@ -130,15 +130,15 @@ class SequenceTest(SqltoolsTest):
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
-    def test_distinct_multiple(self):
-        sql1 = "select distinct paintings.medium"
-        sql2 = "select avg(paintings.height_mm), paintings.medium group by paintings.medium"
+    # def test_distinct_multiple(self):
+    #     sql1 = "select distinct paintings.medium"
+    #     sql2 = "select avg(paintings.height_mm), paintings.medium group by paintings.medium"
 
-        ignore={
-            State.FROM: True
-        }
+    #     ignore={
+    #         State.FROM: True
+    #     }
 
-        self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2, ignore=ignore), ignore=ignore), sql2)
+    #     self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2, ignore=ignore), ignore=ignore), sql2)
 
     # def test_get_node_from_sequence(self):
     #     sql1 = 'SELECT count(*) FROM Professionals'

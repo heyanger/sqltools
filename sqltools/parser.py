@@ -235,16 +235,6 @@ class Parser:
                 node.children.append(tn)
 
     @staticmethod
-    def handle_join(node, tokens, col_map, ignore=None):
-        for tok in tokens:
-            if type(tok) is sqlparse.sql.Comparison:
-                for child_tok in tok.tokens:
-                    print(child_tok, type(child_tok))
-                    if type(child_tok) is sqlparse.sql.Identifier:
-                        print(child_tok.tokens[-1].value)
-                return
-
-    @staticmethod
     def update_col_map(token, col_map):
         if col_map is None:
             return
@@ -448,7 +438,6 @@ class Unparser:
         for c in node.children:
             if c.type != State.DISTINCT and c.type != State.FROM:
                 cols.append(Unparser.unparse(c))
-                print(c.value)
 
         res = res + ', '.join(cols)
 
