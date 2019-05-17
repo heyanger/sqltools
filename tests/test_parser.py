@@ -48,7 +48,7 @@ class ParserTest(SqltoolsTest):
         node.children[1].children.append(TreeNode(State.AGG, value="max"))
         node.children.append(TreeNode(State.COL, value="department_name"))
 
-        sql = "SELECT max(salary), department_name FROM instructor"
+        sql = "SELECT max( salary ), department_name FROM instructor"
         token = sqlparse.parse(sql)[0]
 
         tn = TreeNode(State.SELECT)
@@ -371,7 +371,7 @@ class ParserTest(SqltoolsTest):
             'othertable': ['abc']
         }
 
-        tn = to_tree(sql, table_info)
+        tn = to_tree(sql, table_info=table_info)
 
         self.assertTreeEqual(tn, node)
 
@@ -391,7 +391,7 @@ class ParserTest(SqltoolsTest):
             'othertable': ['abc']
         }
 
-        tn = to_tree(sql, table_info)
+        tn = to_tree(sql, table_info=table_info)
 
         self.assertTreeEqual(tn, node)
 
@@ -411,7 +411,7 @@ class ParserTest(SqltoolsTest):
             'othertable': ['abc']
         }
 
-        tn = to_tree(sql, table_info)
+        tn = to_tree(sql, table_info=table_info)
 
         self.assertTreeEqual(tn, node)
 
@@ -432,7 +432,7 @@ class ParserTest(SqltoolsTest):
             'othertable': ['abc']
         }
 
-        tn = to_tree(sql, table_info)
+        tn = to_tree(sql, table_info=table_info)
 
         self.assertTreeEqual(tn, node)
 
@@ -441,8 +441,8 @@ class ParserTest(SqltoolsTest):
             'airports': ['city', 'airportcode', 'airportname', 'country', 'countryabbrev', 'apid', 'name', 'city', 'country', 'x', 'y', 'elevation', 'iata', 'icao']
         }
 
-        sql1 = 'select airports.city, airports.airportcode from airports where city = "anthony"'
-        sql2 = to_sql(to_tree(sql1, table_info)).lower()
+        sql1 = 'select airports.city, airports.airportcode from airports where airports.city = "anthony"'
+        sql2 = to_sql(to_tree(sql1, table_info=table_info)).lower()
         
         self.assertEqual(sql1, sql2)
 
@@ -561,3 +561,13 @@ class ParserTest(SqltoolsTest):
         sql2 = to_sql(to_tree(sql1))
 
         self.assertEqual(sql1.lower(), sql2.lower())
+
+    def test_ignore(self):
+        sql1 = "select documents.*"
+        tree = to_tree(sql1, ignore={
+            State.FROM: True
+        })
+        sql2 = to_sql(tree).strip()
+
+        self.assertEqual(sql1.lower(), sql2.lower())
+    

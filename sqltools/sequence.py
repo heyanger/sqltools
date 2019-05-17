@@ -141,8 +141,9 @@ def generate_sequence(left, right):
     Sequence.compare(left, right)
     return Sequence.generate_sequence(left, right)
 
-def generate_sequence_sql(left, right, table_info=None):
-    left, right = to_tree(left, table_info), to_tree(right, table_info)
+def generate_sequence_sql(left, right, table_info=None, ignore=None):
+    left, right = to_tree(left, table_info=table_info, ignore=ignore), to_tree(right, table_info=table_info, ignore=ignore)
+
     Sequence.compare(left, right)
     seq = Sequence.generate_sequence(left, right)
     return seq
@@ -151,8 +152,8 @@ def apply_sequence(tree, sequence):
     Sequence.apply_sequence(tree, sequence, 0)
     return tree
 
-def apply_sequence_sql(sql, sequence, table_info=None):
-    tree = to_tree(sql, table_info)
+def apply_sequence_sql(sql, sequence, table_info=None, ignore=None):
+    tree = to_tree(sql, table_info=table_info, ignore=ignore)
     new_tree = apply_sequence(tree, sequence)
     return to_sql(new_tree)
 
