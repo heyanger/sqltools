@@ -110,3 +110,18 @@ class SequenceTest(SqltoolsTest):
     #     sql2 = "select distinct template_type_code from templates"
 
     #     self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
+
+    # def test_apply_sequence_sql13(self):
+    #     sql1 = "select carrier from device"
+    #     sql2 = "SELECT count(DISTINCT carrier) FROM device"
+    #
+    #     tree_print(to_tree(sql2))
+    #     print(generate_sequence_sql(sql1, sql2))
+    #
+    #     self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
+
+    def test_apply_sequence_sql14(self):
+        sql1 = "select country from singer where age > 20"
+        sql2 = "SELECT DISTINCT country FROM singer WHERE age > 20"
+
+        self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
