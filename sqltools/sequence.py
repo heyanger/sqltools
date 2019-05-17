@@ -10,9 +10,9 @@ class Sequence:
 
         candidate = True
 
-        for l in left.children:
+        for idxl, l in enumerate(left.children):
             found = False
-            for r in right.children:
+            for r in right.children[idxl:]:
                 if r.value == l.value and r.type == l.type:
                     res = Sequence.compare(l, r)
                     candidate = candidate and res
@@ -143,9 +143,6 @@ def generate_sequence(left, right):
 def generate_sequence_sql(left, right, table_info=None):
     left, right = to_tree(left, table_info), to_tree(right, table_info)
     Sequence.compare(left, right)
-
-    tree_print(left, highlights=['status','insert'])
-
     seq = Sequence.generate_sequence(left, right)
     return seq
 
