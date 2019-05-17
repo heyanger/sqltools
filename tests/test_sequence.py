@@ -134,7 +134,4 @@ class SequenceTest(SqltoolsTest):
         sql1 = 'SELECT count(*) FROM Professionals'
         sql2 = "SELECT count(*) FROM Professionals WHERE city = 'West Heidi'"
 
-        sequence = generate_sequence_sql(sql1, sql2)
-        tree = to_tree(sql1)
-
         self.assertTreeEqual(get_node_from_sequence(tree, sequence[:2]), tree.children[0].children[0])
