@@ -14,7 +14,7 @@ class State(Enum):
     TERMINAL = auto()
     LOGIC = auto()
     NONE = auto()
-    IUE = auto()    
+    IUE = auto()
 
 class Seq(Enum):
     copy = auto()
