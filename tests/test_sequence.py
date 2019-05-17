@@ -105,3 +105,8 @@ class SequenceTest(SqltoolsTest):
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
+    # def test_apply_sequence_with_distinct(self):
+    #     sql1 = "select template_type_code from templates"
+    #     sql2 = "select distinct template_type_code from templates"
+
+    #     self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)

@@ -128,6 +128,7 @@ class Sequence:
 
         return idx
 
+    @staticmethod
     def apply_insert_sequence(node, inseq):
         if len(inseq) == 0:
             return

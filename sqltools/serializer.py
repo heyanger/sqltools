@@ -71,6 +71,10 @@ class Serializer:
             return State.AGG
         elif str == "OP":
             return State.OP
+        elif str == "JOIN":
+            return State.JOIN
+        elif str == "DISTINCT":
+            return State.DISTINCT
         elif str == "FROM":
             return State.FROM
         elif str == "TABLE":

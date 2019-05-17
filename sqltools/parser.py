@@ -150,6 +150,9 @@ class Parser:
         Parser.handle_tables(node, cur_tokens, col_map)
 
         for c in cols:
+            if type(c) is sqlparse.sql.Token and c.value.lower() == 'distinct':
+                node.children.append(TreeNode(State.DISTINCT))
+
             if type(c) is sqlparse.sql.IdentifierList:
                 for k in c.tokens:
                     if type(k) is sqlparse.sql.Function or type(k) is sqlparse.sql.Identifier or (type(k) is sqlparse.sql.Token and k.value == '*'):
@@ -167,16 +170,68 @@ class Parser:
         tables = inbetween_toks_multi(tokens, sqlparse.sql.Token, 'from', [(y, z) for x, y, z in Parser.KEYWORDS[1:]])
 
         cur_node = TreeNode(State.FROM)
-
         node.children.append(cur_node)
 
-        for t in tables[1:]:
-            if type(t) is sqlparse.sql.Identifier:
-                child_node = TreeNode(State.TABLE, value=Parser.generate_table_name(t))
-
+        if find_token(tokens, typ=sqlparse.sql.Token, value='join') != -1:
+            Parser.handle_tables_join(cur_node, tables, col_map)
+            return
+        
+        for tab in tables[1:]:
+            if type(tab) is sqlparse.sql.Identifier:
+                child_node = TreeNode(State.TABLE, value=Parser.generate_table_name(tab))
                 cur_node.children.append(child_node)
+                Parser.update_col_map(tab, col_map)
 
-                Parser.update_col_map(t, col_map)
+    @staticmethod
+    def handle_tables_join(node, tokens, col_map):
+        aliases = {}  
+
+        for tok in tokens[1:]:
+            if type(tok) is sqlparse.sql.Identifier:
+                subtokens = tok.tokens
+
+                name = subtokens[0].value
+                identifier = subtokens[-1].value
+
+                tn = TreeNode(State.TABLE, value=name)
+
+                aliases[name] = tn
+                aliases[identifier] = tn
+            
+        for tok in tokens[1:]:
+            if type(tok) is sqlparse.sql.Comparison:
+                toks = tok.tokens
+
+                left = toks[0]
+                right = toks[-1]
+
+                left_alias = left.tokens[0].value
+                left_col = left.tokens[-1].value
+
+                right_alias = right.tokens[0].value
+                right_col = right.tokens[-1].value
+
+                tn = TreeNode(State.JOIN)
+                cn1 = aliases[left_alias]
+                cn1.children.append(TreeNode(State.COL, value=left_col))
+
+                cn2 = aliases[right_alias]
+                cn2.children.append(TreeNode(State.COL, value=right_col))
+
+                tn.children.append(cn1)
+                tn.children.append(cn2)
+
+                node.children.append(tn)
+
+    @staticmethod
+    def handle_join(node, tokens, col_map):
+        for tok in tokens:
+            if type(tok) is sqlparse.sql.Comparison:
+                for child_tok in tok.tokens:
+                    print(child_tok, type(child_tok))
+                    if type(child_tok) is sqlparse.sql.Identifier:
+                        print(child_tok.tokens[-1].value)
+                return
 
     @staticmethod
     def update_col_map(token, col_map):
@@ -335,6 +390,8 @@ class Unparser:
             return Unparser.unparse_col(node)
         elif node.type == State.OP:
             return Unparser.unparse_op(node)
+        elif node.type == State.JOIN:
+            return Unparser.unparse_join(node)
         elif node.type == State.LIMIT:
             return Unparser.unparse_limit(node)
         elif node.type == State.ORDER_BY:
@@ -371,9 +428,15 @@ class Unparser:
     def unparse_select(node):
         res = node.type.name.upper() + " "
 
+        for c in node.children[1:]:
+            if c.type == State.DISTINCT:
+                res = res + State.DISTINCT.name + ' '
+                break
+
         cols = []
         for c in node.children[1:]:
-            cols.append(Unparser.unparse(c))
+            if c.type != State.DISTINCT:
+                cols.append(Unparser.unparse(c))
 
         res = res + ', '.join(cols)
 
@@ -383,17 +446,40 @@ class Unparser:
 
         return res
 
-    def unparse_from(node):
-        res = ''
-        ls = []
+    def unparse_from(node):        
+        if len(node.children) == 0:
+            return ''
 
-        for c in node.children:
-            ls.append(Unparser.unparse(c))
+        # Hardcoded logic. I assume left of first child is root
+        if node.children[0].type == State.JOIN:
+            res = node.children[0].children[0].value
 
-        return ', '.join(ls)
+            ls = []
+            for c in node.children:
+                ls.append(Unparser.unparse(c))
+
+            return res + ' ' + ' '.join(ls)
+
+        else:
+            ls = []
+            for c in node.children:
+                ls.append(Unparser.unparse(c))
+
+            return  ', '.join(ls)
 
     def unparse_table(node):
         return node.value
+
+    def unparse_join(node):
+        # very bad logic (hardcoded)
+        # I expected left element of join to be an old element while right element
+        # to be a new element
+
+        res = 'join ' + node.children[1].value + ' on ' + node.children[0].value +  \
+            '.' + node.children[0].children[0].value + ' = ' + node.children[1].value +  \
+            '.' + node.children[1].children[0].value
+        
+        return res
 
     def unparse_where(node):
         res = node.type.name.upper() + " "
