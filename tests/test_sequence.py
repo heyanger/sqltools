@@ -153,3 +153,9 @@ class SequenceTest(SqltoolsTest):
     #     tree = to_tree(sql1)
 
     #     self.assertTreeEqual(get_node_from_sequence(tree, sequence[:2]), tree.children[0].children[0])
+
+    def test_apply_sequence_sql16(self):
+        sql1 = "select name, number_products from shop"
+        sql2 = "SELECT avg(number_products) FROM shop "
+
+        self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
