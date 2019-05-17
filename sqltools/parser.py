@@ -445,9 +445,10 @@ class Unparser:
                 break
 
         cols = []
-        for c in node.children[1:]:
-            if c.type != State.DISTINCT:
+        for c in node.children:
+            if c.type != State.DISTINCT and c.type != State.FROM:
                 cols.append(Unparser.unparse(c))
+                print(c.value)
 
         res = res + ', '.join(cols)
 
@@ -456,7 +457,9 @@ class Unparser:
         if has_from:
             res = res + " FROM "
 
-        res = res + Unparser.unparse(node.children[0]) + " "
+            res = res + Unparser.unparse(node.children[0]) + " "
+        else:
+            res = res + " "
 
         return res
 
