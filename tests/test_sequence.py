@@ -92,3 +92,9 @@ class SequenceTest(SqltoolsTest):
         sql2 = "SELECT * FROM teacher WHERE age = 32 and age = 33"
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
+
+    def test_apply_sequence_sql11(self):
+        sql1 = "select age from singer where country = 'france'"
+        sql2 = "SELECT avg(age), min(age), max(age) FROM singer WHERE country = 'france'"
+
+        self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
