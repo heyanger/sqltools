@@ -159,11 +159,23 @@ def apply_sequence_sql(sql, sequence, table_info=None, ignore=None):
     new_tree = apply_sequence(tree, sequence)
     return to_sql(new_tree)
 
-def get_sequence_nodes(tree, sequence):
-    """Returns a list of TreeNodes where each element in the list corresponds to the TreeNode
-    where the sequence is applied
-    :param sql: a TreeNode
+def get_node_from_sequence(tree, sequence):
+    """Returns the TreeNode corresponding to the instruction immediately succeeding the sliced sequence
+    :param sql: a TreeNode and a sliced sequence
 
-    :return: List of TreeNode
+    :return: a TreeNode
     """
-    return []
+    def recurse(node, sequence, idx):
+        if node is None or idx >= len(sequence):
+            return node, idx
+
+        idx += 1
+        new_node = None
+        for c in node.children:
+            new_node, idx = recurse(c, sequence, idx)
+            if new_node is not None:
+                break
+
+        return new_node, idx
+
+    return recurse(tree, sequence, 0)[0]
