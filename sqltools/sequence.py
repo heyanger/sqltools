@@ -10,9 +10,10 @@ class Sequence:
 
         candidate = True
 
+        idxt = 0
         for idxl, l in enumerate(left.children):
             found = False
-            for r in right.children[idxl:]:
+            for r in right.children[idxl-idxt:]:
                 if r.value == l.value and r.type == l.type:
                     res = Sequence.compare(l, r)
                     candidate = candidate and res
@@ -24,6 +25,7 @@ class Sequence:
 
             if not found:
                 l.attr['status'] = Seq.remove
+                idxt += 1
 
         left.attr['insert'] = []
 
