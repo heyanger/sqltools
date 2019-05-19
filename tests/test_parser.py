@@ -180,8 +180,6 @@ class ParserTest(SqltoolsTest):
         tn = TreeNode(State.SELECT)
         Parser.handle_select(tn, token)
 
-        self.print_tree(tn)
-
         self.assertTreeEqual(tn, node)
 
     def test_select3(self):
@@ -196,8 +194,6 @@ class ParserTest(SqltoolsTest):
 
         tn = TreeNode(State.SELECT)
         Parser.handle_select(tn, token)
-
-        self.print_tree(tn)
 
         self.assertTreeEqual(tn, node)
 
@@ -281,8 +277,6 @@ class ParserTest(SqltoolsTest):
         tn = TreeNode(State.ROOT)
         Parser.handle(tn, token)
 
-        self.print_tree(node)
-
         self.assertTreeEqual(tn, node)
 
     def test_complex(self):
@@ -336,8 +330,6 @@ class ParserTest(SqltoolsTest):
         tn = TreeNode(State.ROOT)
         Parser.handle(tn, token, col_map={'salary': 'instructor.salary'})
 
-        self.print_tree(tn)
-
         self.assertTreeEqual(tn, node)
 
     def test_tables_2(self):
@@ -372,8 +364,6 @@ class ParserTest(SqltoolsTest):
 
         tn = TreeNode(State.ROOT)
         Parser.handle(tn, token, col_map={'t1.salary': 'instructor.salary'})
-
-        self.print_tree(tn)
 
         self.assertTreeEqual(tn, node)
 
@@ -511,11 +501,11 @@ class ParserTest(SqltoolsTest):
 
         self.assertTreeEqual(tn, node)
 
-    def test_conv1(self):
-        sql1 = "select cost_of_treatment from treatments order by date_of_treatment desc limit 1"
-        sql2 = to_sql(to_tree(sql1)).lower()
+    # def test_conv10(self):
+    #     sql1 = "select cost_of_treatment from treatments order by date_of_treatment desc limit 1"
+    #     sql2 = to_sql(to_tree(sql1)).lower()
 
-        self.assertEqual(sql1, sql2)
+    #     self.assertEqual(sql1, sql2)
 
     def test_between_1(self):
         node = TreeNode(State.WHERE)
@@ -548,8 +538,6 @@ class ParserTest(SqltoolsTest):
         token = sqlparse.parse(sql)[0]
         tn = TreeNode(State.ROOT)
         Parser.handle(tn, token)
-
-        tree_print(tn)
 
         self.assertTreeEqual(tn, node)
 

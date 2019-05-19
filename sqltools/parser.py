@@ -99,7 +99,7 @@ class Parser:
             child_node = TreeNode(State.COL)
             Parser.handle(child_node, tok, col_map, ignore)
             node.children.append(child_node)
-        elif len(tokens) == 2:
+        elif len(tokens) == 2 and type(tokens[-1]) is sqlparse.sql.Token:
             child_tokens = get_toks(tokens[-1].tokens)
 
             if type(child_tokens[-1]) is sqlparse.sql.Token and child_tokens[-1].ttype == t.Keyword.Order:
@@ -163,7 +163,7 @@ class Parser:
             node.children.append(n)
 
     @staticmethod
-    def handle_col(node, token, col_map=None):
+    def handle_col(node, token, col_map=None, ignore=None):
         # handle for desequenced
         if type(token) is list:
             Parser.handle_col_list(node, token, col_map)
@@ -388,7 +388,7 @@ class Parser:
     def handle_where(node, tokens, col_map=None, ignore=None):
         token = get_toks(tokens[0].tokens)
         if token[0].value.lower() == 'where':
-            Parser.handle_logic(node, token[1:], col_map)
+            Parser.handle_logic(node, token[1:], col_map, ignore)
 
         # for sequence,
         # age = 32 and age = 33
@@ -664,7 +664,7 @@ class Unparser:
 
 
 
-def to_tree(sql, table_info=None, ignore={}):
+def to_tree(sql, table_info=None, ignore=None):
     """Converts a sql string into a tree of type TreeNode
     :param sql: a sql string
 

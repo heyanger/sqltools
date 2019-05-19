@@ -106,8 +106,6 @@ class Sequence:
                 ls.append(Seq.copyandchange.name + '[' + sql_string + ']')
             else:
                 sql_string = Unparser.unparse(attr['insert'][0])
-                print(attr['insert'][0].type)
-                print(attr['insert'][0].value)
                 for i, n in enumerate(attr['insert']):
                     if i != 0:
                         sql_string = sql_string + ',' + Unparser.unparse(n)
@@ -115,7 +113,6 @@ class Sequence:
 
         for c in node.children:
             Sequence.generate_sequence_text(c, ls, linear_insert)
-        print(ls)
 
     @staticmethod
     def apply_sequence(node, sequence, idx, linear_insert=False):
@@ -153,12 +150,12 @@ class Sequence:
             if linear_insert is False:
                 node.children.append(Serializer.deserialize(c))
             else:
-                # print(c)
                 tokens = sqlparse.parse(c)[0].tokens
-                print(tokens[0].value)
-                print(node.type)
-                print(type(tokens))
-                Parser.handle(node, tokens)
+
+                if linear_insert:
+                    Parser.handle(node, tokens, ignore={State.FROM: True})
+                else:
+                    Parser.handle(node, tokens)
 
 def generate_sequence(left, right, table_info=None, linear_insert=False):
     """Generates a sequence for two trees
@@ -171,13 +168,9 @@ def generate_sequence(left, right, table_info=None, linear_insert=False):
     Sequence.compare(left, right)
     return Sequence.generate_sequence(left, right, table_info, linear_insert)
 
-def generate_sequence_sql(left, right, table_info=None, ignore=None):
+def generate_sequence_sql(left, right, table_info=None, ignore=None, linear_insert=False):
     left, right = to_tree(left, table_info=table_info, ignore=ignore), to_tree(right, table_info=table_info, ignore=ignore)
-
-    Sequence.compare(left, right)
-    seq = Sequence.generate_sequence(left, right)
-    return seq
-
+    
     return generate_sequence(left, right, table_info, linear_insert)
 
 def apply_sequence(tree, sequence, linear_insert=False):
