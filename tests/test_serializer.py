@@ -12,7 +12,6 @@ class SerializeTest(SqltoolsTest):
         left.children.append(TreeNode(State.COL, value="department_name"))
 
         str = Serializer.serialize(left)
-        print(str)
 
         self.assertEqual(str, "SELECT(COL[salary](AGG[max]),COL[department_name])")
 
@@ -24,15 +23,10 @@ class SerializeTest(SqltoolsTest):
         left.children[0].children.append(TreeNode(State.AGG, value="max"))
         left.children.append(TreeNode(State.COL, value="department_name"))
 
-        tree_print(left)
-        tree_print(Serializer.deserialize(str))
-
         self.assertTreeEqual(Serializer.deserialize(str), left)
 
     def test_smart_split(self):
         str = "COL[salary](AGG[max]),COL[department_name],SELECT"
         strlist = ['COL[salary](AGG[max])', 'COL[department_name]', 'SELECT']
-
-        print(Serializer.smart_split(str, ','))
-
+        
         self.assertEqual(Serializer.smart_split(str, ','), strlist)

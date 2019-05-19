@@ -12,9 +12,10 @@ class Sequence:
 
         candidate = True
 
+        idxt = 0
         for idxl, l in enumerate(left.children):
             found = False
-            for r in right.children[idxl:]:
+            for r in right.children[idxl-idxt:]:
                 if r.value == l.value and r.type == l.type:
                     res = Sequence.compare(l, r)
                     candidate = candidate and res
@@ -26,17 +27,20 @@ class Sequence:
 
             if not found:
                 l.attr['status'] = Seq.remove
+                idxt += 1
 
         left.attr['insert'] = []
 
-        for idx, r in enumerate(right.children):
+        num_same = 0
+        for r in right.children:
             found = False
             for l in left.children:
                 if r.value == l.value and r.type == l.type:
                     found = True
+                    num_same += 1
                     break
 
-            if not found or idx >= len(left.children):
+            if not found or num_same > len(left.children):
                 left.attr['insert'].append(r)
 
         for l in left.children:
@@ -167,15 +171,12 @@ def generate_sequence(left, right, table_info=None, linear_insert=False):
     Sequence.compare(left, right)
     return Sequence.generate_sequence(left, right, table_info, linear_insert)
 
-def generate_sequence_sql(left, right, table_info=None, linear_insert=False):
-    """Generates a sequence for two sql strings
-    :param left: A String
-    :param right: A String
+def generate_sequence_sql(left, right, table_info=None, ignore=None):
+    left, right = to_tree(left, table_info=table_info, ignore=ignore), to_tree(right, table_info=table_info, ignore=ignore)
 
-    :return: A List of sequence
-    """
-
-    left, right = to_tree(left, table_info), to_tree(right, table_info)
+    Sequence.compare(left, right)
+    seq = Sequence.generate_sequence(left, right)
+    return seq
 
     return generate_sequence(left, right, table_info, linear_insert)
 
@@ -183,16 +184,29 @@ def apply_sequence(tree, sequence, linear_insert=False):
     Sequence.apply_sequence(tree, sequence, 0, linear_insert)
     return tree
 
-def apply_sequence_sql(sql, sequence, table_info=None, linear_insert=False):
-    tree = to_tree(sql, table_info)
-    new_tree = apply_sequence(tree, sequence, linear_insert)
+def apply_sequence_sql(sql, sequence, table_info=None, ignore=None, linear_insert=False):
+    tree = to_tree(sql, table_info=table_info, ignore=ignore)
+    new_tree = apply_sequence(tree, sequence, linear_insert=linear_insert)
+
     return to_sql(new_tree)
 
-def get_sequence_nodes(tree, sequence):
-    """Returns a list of TreeNodes where each element in the list corresponds to the TreeNode
-    where the sequence is applied
-    :param sql: a TreeNode
+def get_node_from_sequence(tree, sequence):
+    """Returns the TreeNode corresponding to the instruction immediately succeeding the sliced sequence
+    :param sql: a TreeNode and a sliced sequence
 
-    :return: List of TreeNode
+    :return: a TreeNode
     """
-    return []
+    def recurse(node, sequence, idx):
+        if node is None or idx >= len(sequence):
+            return node, idx
+
+        idx += 1
+        new_node = None
+        for c in node.children:
+            new_node, idx = recurse(c, sequence, idx)
+            if new_node is not None:
+                break
+
+        return new_node, idx
+
+    return recurse(tree, sequence, 0)[0]

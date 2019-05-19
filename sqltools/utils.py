@@ -6,7 +6,7 @@ from collections import deque
 t = sqlparse.tokens.Token
 
 def get_toks(tokens):
-    return list(filter(lambda x:x.ttype != t.Text.Whitespace, tokens))
+    return list(filter(lambda x:x.ttype != t.Text.Whitespace and x.ttype != t.Punctuation, tokens))
 
 def find_token(tokens, typ=None, value=None):
     for i in range(len(tokens)):
@@ -138,7 +138,7 @@ def in_between_mult(sentence, left, words):
         v = smart_find(sentence.lower(), w.lower())
 
         if v >= 0:
-            r = min(x, v)
+            r = min(r, v)
 
     return sentence[l+len(left):r]
 
