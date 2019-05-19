@@ -115,8 +115,62 @@ class Parser:
     
 
     @staticmethod
-    def handle_col(node, token, col_map=None, ignore=None):
+    def handle_col_list(node, token, col_map=None):
+        cur_tokens = get_toks(token)
+
+        # for handle pair
+        if cur_tokens[0].value[-2:] != "()":
+            OPS = ['=', '<', '>', '>=', '<=', '!=', 'like', 'not', 'between']
+
+            # for handle "state like 'a'", state is col name
+            if cur_tokens is not None and len(cur_tokens) >= 2 and cur_tokens[0].value in OPS:
+                n = node
+                op = cur_tokens[0].value
+
+                if op.lower() != 'between':
+
+                    if len(cur_tokens) > 2:
+                        op = ' '.join(c.value for c in cur_tokens[0:-1])
+
+                    cn = TreeNode(State.OP, value=op.lower())
+                    n.children.append(cn)
+
+                    right = cur_tokens[-1]
+                    leaf_node = None
+
+                    if type(right) is sqlparse.sql.Parenthesis:
+                        leaf_node = TreeNode(State.ROOT)
+                        Parser.handle(leaf_node, right, col_map)
+                    else:
+                        leaf_node = TreeNode(State.TERMINAL, value=right.value)
+
+                    cn.children.append(leaf_node)
+
+                # between
+                else:
+                    cn = TreeNode(State.OP, value=op.lower())
+                    n.children.append(cn)
+                    right_1 = cur_tokens[-3]
+                    right_2 = cur_tokens[-1]
+                    leaf_node_1 = TreeNode(State.TERMINAL, value=right_1.value)
+                    leaf_node_2 = TreeNode(State.TERMINAL, value=right_2.value)
+                    cn.children.append(leaf_node_1)
+                    cn.children.append(leaf_node_2)
+
+        # for handle agg
+        else:
+            n = TreeNode(State.AGG, value=cur_tokens[0].value[0:-2])
+            node.children.append(n)
+
+    @staticmethod
+    def handle_col(node, token, col_map=None):
+        # handle for desequenced
+        if type(token) is list:
+            Parser.handle_col_list(node, token, col_map)
+            return
+
         if type(token) is sqlparse.sql.Function:
+            # for agg(column), agg will be inserted
             n = TreeNode(State.AGG, value = token.tokens[0].value)
             node.children.append(n)
 
@@ -333,8 +387,14 @@ class Parser:
     @staticmethod
     def handle_where(node, tokens, col_map=None, ignore=None):
         token = get_toks(tokens[0].tokens)
+        if token[0].value.lower() == 'where':
+            Parser.handle_logic(node, token[1:], col_map)
 
-        Parser.handle_logic(node, token[1:], col_map, ignore)
+        # for sequence,
+        # age = 32 and age = 33
+        # State.WHERE
+        else:
+            Parser.handle_logic(node, token[1:], col_map, ignore)
 
     @staticmethod
     def handle_logic(node, tokens, col_map=None, ignore=None):
@@ -376,6 +436,7 @@ class Parser:
 
 
 class Unparser:
+    @staticmethod
     def unparse(node):
         if node.type == State.ROOT:
             return Unparser.unparse_root(node)
@@ -407,15 +468,23 @@ class Unparser:
             return Unparser.unparse_from(node)
         elif node.type == State.TERMINAL:
             return Unparser.unparse_terminal(node)
+        elif node.type == State.AGG:
+            return Unparser.unparse_agg(node)
 
         return ""
 
+    @staticmethod
+    def unparse_agg(node):
+        return node.value + '()'
+
+    @staticmethod
     def unparse_root(node):
         if len(node.children) > 0:
             return Unparser.unparse(node.children[0])
 
         return ""
 
+    @staticmethod
     def unparse_keyword(node):
         res = ""
 
@@ -426,6 +495,7 @@ class Unparser:
 
         return res
 
+    @staticmethod
     def unparse_select(node):
         res = node.type.name.upper() + " "
 
@@ -452,6 +522,7 @@ class Unparser:
 
         return res
 
+    @staticmethod
     def unparse_from(node):        
         if len(node.children) == 0:
             return ''
@@ -473,9 +544,11 @@ class Unparser:
 
             return  ', '.join(ls)
 
+    @staticmethod
     def unparse_table(node):
         return node.value
 
+    @staticmethod
     def unparse_join(node):
         # very bad logic (hardcoded)
         # I expected left element of join to be an old element while right element
@@ -495,6 +568,7 @@ class Unparser:
 
         return res + ' '
 
+    @staticmethod
     def unparse_orderby(node):
         child = []
         for c in node.children:
@@ -507,6 +581,7 @@ class Unparser:
 
         return res + ' '
 
+    @staticmethod
     def unparse_groupby(node):
         child = []
         for c in node.children:
@@ -522,6 +597,7 @@ class Unparser:
 
         return res + ' '
 
+    @staticmethod
     def unparse_having(node):
         res = node.type.name.lower() + ' '
 
@@ -530,9 +606,11 @@ class Unparser:
 
         return res
 
+    @staticmethod
     def unparse_limit(node):
         return State.LIMIT.name + ' ' + node.value
 
+    @staticmethod
     def unparse_col(node):
         res = node.value
 
@@ -544,6 +622,7 @@ class Unparser:
 
         return res
 
+    @staticmethod
     def unparse_op(node):
 
         res = " " + node.value + " "
@@ -560,14 +639,17 @@ class Unparser:
 
         return res
 
+    @staticmethod
     def unparse_logic(node):
         res = " " + node.value + " "
         res = Unparser.unparse(node.children[0]) + res + Unparser.unparse(node.children[1])
         return res
 
+    @staticmethod
     def unparse_terminal(node):
         return node.value
 
+    @staticmethod
     def priority_sort(node):
         # VERY BAD SORTING ALG
         priority_list = [State.SELECT, State.WHERE, State.GROUP_BY, State.ORDER_BY, State.LIMIT]

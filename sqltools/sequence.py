@@ -1,6 +1,8 @@
 from sqltools.parser import *
 from sqltools.serializer import *
 
+import sqlparse
+
 class Sequence:
     @staticmethod
     def compare(left, right):
@@ -54,14 +56,14 @@ class Sequence:
         return True
 
     @staticmethod
-    def generate_sequence(left, right):
+    def generate_sequence(left, right, table_info=None, linear_insert=False):
         if left is None or right is None:
             return []
 
         Sequence.compare(left, right)
 
         res = []
-        Sequence.generate_sequence_text(left, res)
+        Sequence.generate_sequence_text(left, res, linear_insert)
         return res + []
 
     @staticmethod
@@ -80,7 +82,7 @@ class Sequence:
         return ls
 
     @staticmethod
-    def generate_sequence_text(node, ls):
+    def generate_sequence_text(node, ls, linear_insert=False):
         if node is None:
             return
 
@@ -96,17 +98,27 @@ class Sequence:
         if len(attr['insert']) == 0:
             ls.append(Seq.copyandchange.name)
         else:
-            sql_string = Serializer.serialize(attr['insert'][0])
-            for i, n in enumerate(attr['insert']):
-                if i != 0:
-                    sql_string = sql_string + ',' + Serializer.serialize(n)
-            ls.append(Seq.copyandchange.name + '[' + sql_string + ']')
+            if linear_insert is False:
+                sql_string = Serializer.serialize(attr['insert'][0])
+                for i, n in enumerate(attr['insert']):
+                    if i != 0:
+                        sql_string = sql_string + ',' + Serializer.serialize(n)
+                ls.append(Seq.copyandchange.name + '[' + sql_string + ']')
+            else:
+                sql_string = Unparser.unparse(attr['insert'][0])
+                print(attr['insert'][0].type)
+                print(attr['insert'][0].value)
+                for i, n in enumerate(attr['insert']):
+                    if i != 0:
+                        sql_string = sql_string + ',' + Unparser.unparse(n)
+                ls.append(Seq.copyandchange.name + '[' + sql_string + ']')
 
         for c in node.children:
-            Sequence.generate_sequence_text(c, ls)
+            Sequence.generate_sequence_text(c, ls, linear_insert)
+        print(ls)
 
     @staticmethod
-    def apply_sequence(node, sequence, idx):
+    def apply_sequence(node, sequence, idx, linear_insert=False):
         if idx >= len(sequence):
             return idx
 
@@ -121,29 +133,43 @@ class Sequence:
                 c.attr['remove'] = True
                 idx += 1
             elif sequence[idx] == Seq.copy.name or sequence[idx].startswith(Seq.copyandchange.name):
-                idx = Sequence.apply_sequence(c, sequence, idx)
+                idx = Sequence.apply_sequence(c, sequence, idx, linear_insert)
 
         node.children = list(filter(lambda x: 'remove' not in x.attr, node.children))
 
         if idn < len(sequence):
             if not sequence[idn] == Seq.copyandchange.name:
                 inseq = remove_front_sqbracket(sequence[idn])
-                Sequence.apply_insert_sequence(node, inseq)
+                Sequence.apply_insert_sequence(node, inseq, linear_insert)
 
         return idx
 
-    @staticmethod
-    def apply_insert_sequence(node, inseq):
+    def apply_insert_sequence(node, inseq, linear_insert=False):
         if len(inseq) == 0:
             return
+
         content = Serializer.smart_split(inseq, ',')
         for c in content:
-            node.children.append(Serializer.deserialize(c))
+            if linear_insert is False:
+                node.children.append(Serializer.deserialize(c))
+            else:
+                # print(c)
+                tokens = sqlparse.parse(c)[0].tokens
+                print(tokens[0].value)
+                print(node.type)
+                print(type(tokens))
+                Parser.handle(node, tokens)
 
-def generate_sequence(left, right):
+def generate_sequence(left, right, table_info=None, linear_insert=False):
+    """Generates a sequence for two trees
+    :param left: A TreeNode
+    :param right: A TreeNode
+
+    :return: A List of sequence
+    """
     left, right = left.clone(), right.clone()
     Sequence.compare(left, right)
-    return Sequence.generate_sequence(left, right)
+    return Sequence.generate_sequence(left, right, table_info, linear_insert)
 
 def generate_sequence_sql(left, right, table_info=None, ignore=None):
     left, right = to_tree(left, table_info=table_info, ignore=ignore), to_tree(right, table_info=table_info, ignore=ignore)
@@ -152,13 +178,15 @@ def generate_sequence_sql(left, right, table_info=None, ignore=None):
     seq = Sequence.generate_sequence(left, right)
     return seq
 
-def apply_sequence(tree, sequence):
-    Sequence.apply_sequence(tree, sequence, 0)
+    return generate_sequence(left, right, table_info, linear_insert)
+
+def apply_sequence(tree, sequence, linear_insert=False):
+    Sequence.apply_sequence(tree, sequence, 0, linear_insert)
     return tree
 
-def apply_sequence_sql(sql, sequence, table_info=None, ignore=None):
+def apply_sequence_sql(sql, sequence, table_info=None, ignore=None, linear_insert=False):
     tree = to_tree(sql, table_info=table_info, ignore=ignore)
-    new_tree = apply_sequence(tree, sequence)
+    new_tree = apply_sequence(tree, sequence, linear_insert=linear_insert)
 
     return to_sql(new_tree)
 
