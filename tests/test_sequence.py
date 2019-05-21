@@ -293,3 +293,14 @@ class SequenceTest(SqltoolsTest):
 
         self.assertEqual(apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2)), sql2)
 
+    def test_conv_ignore_linear_1(self):
+        sql1 = "select * where student.sex = value"
+        sql2 = "SELECT * WHERE student.sex = value and pets.pettype = value "
+
+
+        ignore = {
+            State.FROM: True
+        }
+
+        self.assertEqual(
+            apply_sequence_sql(sql1, generate_sequence_sql(sql1, sql2, linear_insert=True, ignore=ignore), linear_insert=True, ignore=ignore), sql2)

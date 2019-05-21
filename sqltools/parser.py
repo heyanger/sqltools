@@ -86,7 +86,6 @@ class Parser:
             cn.children.append(leaf_node_1)
             cn.children.append(leaf_node_2)
 
-
     @staticmethod
     def handle_orderby(node, tokens, col_map=None, ignore=None):
         tok = None
@@ -387,6 +386,7 @@ class Parser:
     @staticmethod
     def handle_where(node, tokens, col_map=None, ignore=None):
         token = get_toks(tokens[0].tokens)
+
         if token[0].value.lower() == 'where':
             Parser.handle_logic(node, token[1:], col_map, ignore)
 
@@ -394,7 +394,7 @@ class Parser:
         # age = 32 and age = 33
         # State.WHERE
         else:
-            Parser.handle_logic(node, token[1:], col_map, ignore)
+            Parser.handle_logic(node, tokens, col_map, ignore)
 
     @staticmethod
     def handle_logic(node, tokens, col_map=None, ignore=None):

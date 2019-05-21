@@ -181,6 +181,7 @@ def apply_sequence_sql(sql, sequence, table_info=None, ignore=None, linear_inser
     tree = to_tree(sql, table_info=table_info, ignore=ignore)
     new_tree = apply_sequence(tree, sequence, linear_insert=linear_insert)
 
+
     return to_sql(new_tree)
 
 def get_node_from_sequence(tree, sequence):
