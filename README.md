@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/funkytennisball/sqltools.svg?branch=master)](https://travis-ci.com/funkytennisball/sqltools)
+[![Build Status](https://travis-ci.com/heyanger/sqltools.svg?branch=master)](https://travis-ci.com/heyanger/sqltools)
 
 # SQL tools
 
